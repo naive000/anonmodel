@@ -1,0 +1,48 @@
+name: Refresh Hugging Face snapshot
+
+# Keeps data/models.json up to date by re-running the fetch script on a
+# schedule and pushing the result straight back to main when it changes.
+
+on:
+  schedule:
+    # 04:17 UTC daily — off-peak, minute offset to avoid the top-of-hour
+    # GitHub Actions cron stampede.
+    - cron: "17 4 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-snapshot
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Fetch latest model snapshot
+        run: python scripts/fetch_snapshot.py
+
+      - name: Commit and push if data changed
+        run: |
+          set -euo pipefail
+
+          if git diff --quiet -- data/models.json; then
+            echo "No changes to data/models.json — skipping commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/models.json
+          git commit -m "chore: refresh model snapshot"
+          git push

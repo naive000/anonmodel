@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AnonModel — Open AI Model Data Station</title>
+<meta name="description" content="AnonModel is an unofficial, open-source data station for public AI models: trending text-generation rankings, a searchable index of 5,000+ models, provider leaderboards, and RTX 5090 / 4090 / 3090 VRAM compatibility tables. Data sourced from the Hugging Face public API.">
+<meta name="color-scheme" content="dark">
+<meta name="robots" content="index, follow">
+<meta name="author" content="AnonModel">
+<meta name="theme-color" content="#08090B">
+<link rel="canonical" href="./index.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="AnonModel — Open AI Model Data Station">
+<meta property="og:description" content="Trending models, a searchable index of 5,000+ records, provider leaderboards, and GPU VRAM fit tables. Unofficial mirror of the Hugging Face public API.">
+<meta property="og:site_name" content="AnonModel">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2308090B'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='20' font-weight='700' fill='%235CE6A5' text-anchor='middle'%3EA%3C/text%3E%3C/svg%3E">
+<style>
+/* ============================================================
+   AnonModel — design tokens
+   palette: 6 tokens, near-black base + a single phosphor accent
+   ============================================================ */
+:root{
+  --bg:#08090B;
+  --panel:#0E1013;
+  --line:#1C2026;
+  --line-hi:#2B323A;
+  --text:#E9EDF1;
+  --muted:#98A2AD;
+  --accent:#5CE6A5;
+  --accent-soft:rgba(92,230,165,.10);
+  --accent-line:rgba(92,230,165,.32);
+  --warn:#E6C15C;
+
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono","Roboto Mono",monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans","Noto Sans TC",sans-serif;
+
+  --u:8px;
+  --max:1200px;
+  --r:3px;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:var(--sans);font-size:15px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  min-height:100vh;display:flex;flex-direction:column;
+}
+::selection{background:var(--accent);color:#04120C}
+h1,h2,h3,h4{margin:0;font-weight:600;letter-spacing:-.01em}
+a{color:inherit}
+button,select,input{font:inherit;color:inherit}
+
+/* focus — one visible, consistent ring everywhere */
+:focus{outline:none}
+:focus-visible{
+  outline:2px solid var(--accent);
+  outline-offset:2px;
+  border-radius:var(--r);
+}
+
+/* ------------------------------------------------------------
+   masthead
+   ------------------------------------------------------------ */
+.mast{
+  position:sticky;top:0;z-index:50;
+  background:rgba(8,9,11,.86);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line);
+}
+/* signature element #1: a single scanline band, only on the masthead */
+.mast::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(180deg,rgba(255,255,255,.028) 0 1px,transparent 1px 3px);
+  opacity:.7;
+}
+.mast-in{
+  max-width:var(--max);margin:0 auto;
+  padding:0 calc(var(--u)*3);
+  height:60px;display:flex;align-items:center;gap:calc(var(--u)*4);
+}
+.brand{display:flex;align-items:baseline;gap:10px;flex:0 0 auto;text-decoration:none}
+.brand .mark{
+  font-family:var(--mono);font-size:15px;font-weight:700;letter-spacing:.18em;
+  color:var(--text);
+}
+.brand .mark b{color:var(--accent);font-weight:700}
+.brand .caret{
+  display:inline-block;width:7px;height:15px;background:var(--accent);
+  transform:translateY(2px);animation:blink 1.2s steps(1) infinite;
+}
+@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+
+nav.tabs{display:flex;gap:2px;margin-left:auto;flex-wrap:wrap}
+.tab{
+  font-family:var(--mono);font-size:12.5px;letter-spacing:.04em;
+  color:var(--muted);text-decoration:none;
+  padding:7px 12px;border:1px solid transparent;border-radius:var(--r);
+  white-space:nowrap;transition:color .12s ease,background .12s ease;
+}
+.tab:hover{color:var(--text);background:#12151A}
+.tab[aria-current="page"]{
+  color:var(--accent);background:var(--accent-soft);border-color:var(--accent-line);
+}
+
+/* ------------------------------------------------------------
+   shell
+   ------------------------------------------------------------ */
+main{flex:1 0 auto;width:100%;max-width:var(--max);margin:0 auto;padding:calc(var(--u)*5) calc(var(--u)*3) calc(var(--u)*9)}
+.view[hidden]{display:none}
+
+.eyebrow{
+  font-family:var(--mono);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--muted);
+}
+.eyebrow .dot{color:var(--accent)}
+.vh{margin:0 0 calc(var(--u)*3)}
+.vh h1{font-size:clamp(24px,3.6vw,34px);line-height:1.15;margin:10px 0 8px;letter-spacing:-.022em}
+.vh p{margin:0;color:var(--muted);max-width:62ch;font-size:14.5px}
+
+/* stat ledger */
+.ledger{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  border:1px solid var(--line);border-radius:var(--r);
+  background:var(--panel);margin:0 0 calc(var(--u)*5);overflow:hidden;
+}
+.ledger div{padding:14px 16px;border-right:1px solid var(--line)}
+.ledger div:last-child{border-right:none}
+.ledger dt{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0}
+.ledger dd{margin:6px 0 0;font-family:var(--mono);font-size:19px;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+
+/* section head */
+.sect{margin:calc(var(--u)*6) 0 calc(var(--u)*2);display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.sect h2{font-size:17px;letter-spacing:-.01em}
+.sect .note{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.rule{height:1px;background:var(--line);margin:0 0 calc(var(--u)*3)}
+
+/* ------------------------------------------------------------
+   TOP-10 tiles (flat, sharp — deliberately not "cards")
+   ------------------------------------------------------------ */
+.grid10{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.tile{background:var(--panel);padding:18px 18px 16px;display:flex;flex-direction:column;gap:12px;position:relative;transition:background .14s ease}
+.tile:hover{background:#12151A}
+.tile:hover .rank{color:var(--accent)}
+.tile-top{display:flex;align-items:flex-start;gap:12px}
+.rank{
+  font-family:var(--mono);font-size:12px;font-weight:700;color:var(--muted);
+  font-variant-numeric:tabular-nums;padding-top:2px;transition:color .14s ease;flex:0 0 auto;
+}
+.tile .mid{min-width:0;flex:1}
+.tile .mname{
+  font-family:var(--mono);font-size:13.5px;font-weight:600;line-height:1.35;
+  word-break:break-word;
+}
+.tile .mauth{font-size:12.5px;color:var(--muted);margin-top:3px}
+.metrics{display:flex;gap:18px;flex-wrap:wrap;margin-top:auto}
+.metric dt{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.metric dd{margin:2px 0 0;font-family:var(--mono);font-size:14px;font-variant-numeric:tabular-nums}
+.chip{
+  display:inline-block;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;
+  padding:3px 7px;border:1px solid var(--line-hi);border-radius:var(--r);color:var(--muted);
+  max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.chip.lit{color:var(--accent);border-color:var(--accent-line);background:var(--accent-soft)}
+.trend{
+  position:absolute;top:0;right:0;font-family:var(--mono);font-size:10.5px;
+  padding:4px 8px;color:var(--accent);background:var(--accent-soft);
+  border-left:1px solid var(--accent-line);border-bottom:1px solid var(--accent-line);
+  font-variant-numeric:tabular-nums;
+}
+
+/* ------------------------------------------------------------
+   controls
+   ------------------------------------------------------------ */
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin:0 0 calc(var(--u)*2)}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field label{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.field.grow{flex:1 1 260px}
+input[type="search"],select,.btn{
+  background:var(--panel);border:1px solid var(--line-hi);border-radius:var(--r);
+  padding:9px 11px;font-size:13.5px;font-family:var(--mono);color:var(--text);
+  transition:border-color .12s ease,background .12s ease;
+}
+input[type="search"]{width:100%}
+input[type="search"]::placeholder{color:#5D6672}
+input[type="search"]:hover,select:hover,.btn:hover:not(:disabled){border-color:#3B444E}
+input[type="search"]:focus-visible,select:focus-visible{border-color:var(--accent)}
+select{cursor:pointer;-webkit-appearance:none;appearance:none;padding-right:30px;
+  background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+  background-position:calc(100% - 15px) 50%,calc(100% - 10px) 50%;
+  background-size:5px 5px,5px 5px;background-repeat:no-repeat;
+}
+.btn{cursor:pointer;white-space:nowrap}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn.mini{padding:7px 10px;font-size:12px}
+.resultline{font-family:var(--mono);font-size:12px;color:var(--muted);margin:0 0 12px;font-variant-numeric:tabular-nums}
+.resultline b{color:var(--text);font-weight:600}
+
+/* ------------------------------------------------------------
+   tables
+   ------------------------------------------------------------ */
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--panel);-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;min-width:820px}
+thead th{
+  position:sticky;top:0;background:#101317;z-index:1;
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);text-align:left;font-weight:500;
+  padding:11px 14px;border-bottom:1px solid var(--line-hi);white-space:nowrap;
+}
+tbody td{padding:11px 14px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:#12151A}
+td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+td.id{font-family:var(--mono);font-size:12.5px;max-width:340px;word-break:break-word}
+td.rk{font-family:var(--mono);font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums;width:1%;white-space:nowrap}
+td.dim,.dim{color:var(--muted)}
+.tag{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap}
+.pager{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}
+.pager .pos{font-family:var(--mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;margin-right:auto}
+
+/* ------------------------------------------------------------
+   GPU view
+   ------------------------------------------------------------ */
+.formula{
+  border:1px solid var(--line);border-left:2px solid var(--accent);
+  background:var(--panel);border-radius:var(--r);
+  padding:18px 20px;margin:0 0 calc(var(--u)*4);
+}
+.formula h3{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.eq{
+  font-family:var(--mono);font-size:clamp(13px,2.2vw,16px);line-height:1.7;
+  overflow-x:auto;white-space:nowrap;padding-bottom:4px;
+}
+.eq em{color:var(--accent);font-style:normal}
+.bpp{display:flex;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);margin-top:16px;overflow:hidden;flex-wrap:wrap}
+.bpp div{background:#101317;padding:10px 14px;flex:1 1 90px;min-width:90px}
+.bpp dt{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.08em}
+.bpp dd{margin:4px 0 0;font-family:var(--mono);font-size:15px;font-variant-numeric:tabular-nums}
+.bpp dd small{font-size:10.5px;color:var(--muted)}
+.caveat{font-size:12.5px;color:var(--muted);margin:14px 0 0;line-height:1.6}
+.caveat code{font-family:var(--mono);font-size:11.5px;color:var(--text)}
+
+.gpu{margin:0 0 calc(var(--u)*6)}
+.gpu-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;padding-bottom:10px;border-bottom:1px solid var(--line-hi);margin-bottom:2px}
+.gpu-head h3{font-family:var(--mono);font-size:17px;letter-spacing:.02em}
+.gpu-head .vram{font-family:var(--mono);font-size:12px;color:var(--accent);border:1px solid var(--accent-line);background:var(--accent-soft);padding:2px 8px;border-radius:var(--r)}
+.gpu-head .policy{font-size:12.5px;color:var(--muted);margin-left:auto;text-align:right;max-width:52ch}
+.bar{display:block;width:70px;height:5px;background:#1A1F25;border-radius:1px;overflow:hidden;margin-top:5px}
+.bar i{display:block;height:100%;background:var(--accent);opacity:.75}
+.bar.hot i{background:var(--warn)}
+.q{font-family:var(--mono);font-size:11px;padding:2px 6px;border:1px solid var(--accent-line);color:var(--accent);border-radius:var(--r);background:var(--accent-soft)}
+
+/* ------------------------------------------------------------
+   states
+   ------------------------------------------------------------ */
+.state{
+  border:1px solid var(--line);border-radius:var(--r);background:var(--panel);
+  padding:48px 28px;text-align:center;
+}
+.state.err{border-color:#4A2A2E}
+.state .glyph{font-family:var(--mono);font-size:26px;color:var(--accent);margin-bottom:14px}
+.state.err .glyph{color:#E36A75}
+.state h2{font-size:16px;margin-bottom:8px}
+.state p{margin:0 auto;max-width:56ch;color:var(--muted);font-size:13.5px}
+.state code{font-family:var(--mono);color:var(--text);font-size:12.5px}
+.empty{padding:44px 20px;text-align:center;color:var(--muted);font-family:var(--mono);font-size:13px}
+
+/* ------------------------------------------------------------
+   footer — rendered once, visible on every view
+   ------------------------------------------------------------ */
+footer{
+  flex:0 0 auto;border-top:1px solid var(--line);background:#0A0C0E;
+  padding:22px calc(var(--u)*3);
+}
+.foot-in{max-width:var(--max);margin:0 auto;display:flex;gap:16px;justify-content:space-between;flex-wrap:wrap;align-items:baseline}
+footer p{margin:0;font-size:12.5px;color:var(--muted);max-width:78ch}
+footer .sig{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#5D6672;white-space:nowrap}
+footer strong{color:var(--text);font-weight:600}
+
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.skip{position:absolute;left:-9999px;top:0}
+.skip:focus{left:8px;top:8px;z-index:99;background:var(--panel);border:1px solid var(--accent);padding:8px 12px;font-family:var(--mono);font-size:12px;border-radius:var(--r)}
+
+@media (max-width:720px){
+  .mast-in{height:auto;padding:10px calc(var(--u)*2);flex-direction:column;align-items:flex-start;gap:8px}
+  nav.tabs{margin-left:0;width:100%}
+  main{padding:calc(var(--u)*4) calc(var(--u)*2) calc(var(--u)*7)}
+  .gpu-head .policy{margin-left:0;text-align:left}
+  .ledger div{border-right:none;border-bottom:1px solid var(--line)}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="mast">
+  <div class="mast-in">
+    <a class="brand" href="#/top" aria-label="AnonModel — home">
+      <span class="mark" id="wordmark" data-word="ANON<b>MODEL</b>">ANON<b>MODEL</b></span>
+      <span class="caret" aria-hidden="true"></span>
+    </a>
+    <nav class="tabs" aria-label="Views">
+      <a class="tab" href="#/top"       data-view="top">~/top-10</a>
+      <a class="tab" href="#/models"    data-view="models">~/models</a>
+      <a class="tab" href="#/providers" data-view="providers">~/providers</a>
+      <a class="tab" href="#/gpu"       data-view="gpu">~/gpu-fit</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <!-- boot / error / empty -->
+  <section id="boot" class="state" role="status" aria-live="polite">
+    <div class="glyph" aria-hidden="true">[ ··· ]</div>
+    <h2>Decrypting snapshot</h2>
+    <p>Loading <code>data/models.json</code> …</p>
+  </section>
+
+  <!-- 1. TOP 10 -->
+  <section class="view" id="view-top" hidden aria-labelledby="top-h">
+    <div class="vh">
+      <p class="eyebrow"><span class="dot">▪</span> View 01 — trending</p>
+      <h1 id="top-h">Top 10 text-generation models</h1>
+      <p>Ranked by the Hugging Face <span class="tag">trendingScore</span> at snapshot time, restricted to <span class="tag">pipeline_tag = text-generation</span>. Ties break on 30-day downloads.</p>
+    </div>
+    <dl class="ledger" id="top-ledger"></dl>
+    <div class="grid10" id="top-grid"></div>
+  </section>
+
+  <!-- 2. MODEL LIST -->
+  <section class="view" id="view-models" hidden aria-labelledby="models-h">
+    <div class="vh">
+      <p class="eyebrow"><span class="dot">▪</span> View 02 — index</p>
+      <h1 id="models-h">Model index</h1>
+      <p>The full snapshot. Search matches model id, author and tags; results are paginated at 50 rows.</p>
+    </div>
+    <div class="controls">
+      <div class="field grow">
+        <label for="q">Search</label>
+        <input type="search" id="q" placeholder="qwen · meta-llama · gguf · apache-2.0" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="field">
+        <label for="f-pipe">Pipeline</label>
+        <select id="f-pipe"></select>
+      </div>
+      <div class="field">
+        <label for="f-sort">Sort by</label>
+        <select id="f-sort">
+          <option value="downloads">downloads (30d)</option>
+          <option value="downloadsAllTime">downloads (all time)</option>
+          <option value="likes">likes</option>
+          <option value="trendingScore">trendingScore</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="f-dir">Order</label>
+        <button class="btn" id="f-dir" aria-label="Toggle sort order">↓ desc</button>
+      </div>
+    </div>
+    <p class="resultline" id="m-count"></p>
+    <div class="tw">
+      <table>
+        <caption class="sr">Model index</caption>
+        <thead><tr>
+          <th class="n">#</th><th>Model</th><th>Author</th><th>Pipeline</th>
+          <th class="n">DL 30d</th><th class="n">DL all-time</th><th class="n">Likes</th><th class="n">Trend</th>
+          <th>License</th><th>Updated</th>
+        </tr></thead>
+        <tbody id="m-body"></tbody>
+      </table>
+    </div>
+    <div class="pager" id="m-pager"></div>
+  </section>
+
+  <!-- 3. PROVIDERS -->
+  <section class="view" id="view-providers" hidden aria-labelledby="prov-h">
+    <div class="vh">
+      <p class="eyebrow"><span class="dot">▪</span> View 03 — providers</p>
+      <h1 id="prov-h">Provider leaderboard</h1>
+      <p>Records grouped by <span class="tag">author</span>, ranked by total 30-day downloads. All-time totals are shown alongside, since the two orderings differ.</p>
+    </div>
+    <div class="controls">
+      <div class="field grow">
+        <label for="pq">Filter providers</label>
+        <input type="search" id="pq" placeholder="Qwen, meta-llama, nvidia…" autocomplete="off" spellcheck="false">
+      </div>
+    </div>
+    <p class="resultline" id="p-count"></p>
+    <div class="tw">
+      <table>
+        <caption class="sr">Provider leaderboard</caption>
+        <thead><tr>
+          <th class="n">#</th><th>Provider</th><th class="n">Models</th>
+          <th class="n">DL 30d</th><th class="n">DL all-time</th><th class="n">Likes</th>
+          <th>Top pipeline</th>
+        </tr></thead>
+        <tbody id="p-body"></tbody>
+      </table>
+    </div>
+    <div class="pager" id="p-pager"></div>
+  </section>
+
+  <!-- 4. GPU FIT -->
+  <section class="view" id="view-gpu" hidden aria-labelledby="gpu-h">
+    <div class="vh">
+      <p class="eyebrow"><span class="dot">▪</span> View 04 — hardware</p>
+      <h1 id="gpu-h">GPU compatibility</h1>
+      <p>Weight-memory estimates for the text-generation models whose parameter count is published. Estimates cover model weights plus a flat runtime overhead — they are not a benchmark.</p>
+    </div>
+
+    <div class="formula">
+      <h3>Estimation formula</h3>
+      <div class="eq">VRAM<em>GB</em> &nbsp;≈&nbsp; params<em>B</em> &nbsp;×&nbsp; bytes_per_param &nbsp;+&nbsp; <em>1.5&nbsp;GB</em> runtime overhead</div>
+      <dl class="bpp">
+        <div><dt>FP16</dt><dd>2.00 <small>B/param</small></dd></div>
+        <div><dt>Q8</dt><dd>1.07 <small>B/param</small></dd></div>
+        <div><dt>Q6</dt><dd>0.82 <small>B/param</small></dd></div>
+        <div><dt>Q5</dt><dd>0.72 <small>B/param</small></dd></div>
+        <div><dt>Q4</dt><dd>0.60 <small>B/param</small></dd></div>
+      </dl>
+      <p class="caveat">
+        FP16 = 2.00, Q8 ≈ 1.07 and Q4 ≈ 0.60 bytes per parameter are the reference values; Q6 ≈ 0.82 and Q5 ≈ 0.72 are interpolated between them for the mid-range quantisations. The flat <code>1.5 GB</code> covers CUDA context, activations and a short KV cache — long-context work needs more, and MoE checkpoints load all experts into VRAM even though only a few are active per token.
+      </p>
+      <p class="caveat" id="gpu-scope"></p>
+    </div>
+
+    <div id="gpu-tables"></div>
+  </section>
+</main>
+
+<footer>
+  <div class="foot-in">
+    <p><strong>Unofficial mirror.</strong> Data sourced from the Hugging Face public API and served as a static snapshot. AnonModel is not affiliated with, endorsed by, or connected to Hugging Face. Model metadata, licences and parameter counts are reproduced as published by their authors — verify on the source repository before use.</p>
+    <p class="sig" id="foot-sig">ANONMODEL · STATIC SNAPSHOT</p>
+  </div>
+</footer>
+
+<script>
+"use strict";
+/* ============================================================
+   AnonModel — single-file client. No framework, no CDN.
+   ============================================================ */
+
+/* ---------- utilities ---------- */
+const $ = (s, r) => (r || document).querySelector(s);
+const el = id => document.getElementById(id);
+
+function esc(v){
+  if (v === null || v === undefined) return "";
+  return String(v).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function num(n){
+  if (typeof n !== "number" || !isFinite(n)) return "—";
+  return n.toLocaleString("en-US");
+}
+function compact(n){
+  if (typeof n !== "number" || !isFinite(n)) return "—";
+  const a = Math.abs(n);
+  if (a >= 1e9) return (n/1e9).toFixed(a >= 1e10 ? 0 : 1) + "B";
+  if (a >= 1e6) return (n/1e6).toFixed(a >= 1e7 ? 0 : 1) + "M";
+  if (a >= 1e3) return (n/1e3).toFixed(a >= 1e4 ? 0 : 1) + "K";
+  return String(n);
+}
+/* single source of truth for licence rendering — never blank, never "null" */
+function lic(m){
+  const v = m && m.license;
+  if (v === null || v === undefined || String(v).trim() === "" || String(v).toLowerCase() === "null") return "unspecified";
+  return String(v);
+}
+function author(m){
+  const a = m && m.author;
+  if (a === null || a === undefined || String(a).trim() === "") return "(unknown)";
+  return String(a);
+}
+function pipe(m){
+  const p = m && m.pipeline_tag;
+  if (p === null || p === undefined || String(p).trim() === "") return null;
+  return String(p);
+}
+function ymd(s){
+  if (!s) return "—";
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? "—" : d.toISOString().slice(0,10);
+}
+function paramsB(p){
+  if (typeof p !== "number" || !isFinite(p) || p <= 0) return null;
+  return p / 1e9;
+}
+function rank(i){ return String(i+1).padStart(2,"0"); }
+function debounce(fn, ms){
+  let t; return function(){ const a = arguments; clearTimeout(t); t = setTimeout(() => fn.apply(null, a), ms); };
+}
+
+/* ---------- state ---------- */
+const S = {
+  all: [],
+  pipelines: [],
+  providers: [],
+  mPage: 1, mSort: "downloads", mDir: -1, mQuery: "", mPipe: "__all__", mFiltered: [],
+  pPage: 1, pQuery: "", pFiltered: [],
+  ready: false
+};
+const PER = 50;
+
+/* ---------- boot ---------- */
+function fail(title, detail){
+  const b = el("boot");
+  b.hidden = false;
+  b.className = "state err";
+  b.innerHTML =
+    '<div class="glyph" aria-hidden="true">[ ✕ ]</div>' +
+    '<h2>' + esc(title) + '</h2>' +
+    '<p>' + detail + '</p>';
+  document.querySelectorAll(".view").forEach(v => { v.hidden = true; });
+}
+
+async function boot(){
+  let raw;
+  try {
+    const res = await fetch("data/models.json", { cache: "no-cache" });
+    if (!res.ok) throw new Error("HTTP " + res.status + " " + res.statusText);
+    raw = await res.json();
+  } catch (e) {
+    fail("Snapshot unavailable",
+      'Could not load <code>data/models.json</code> — ' + esc(e && e.message ? e.message : "unknown error") +
+      '. The page must be served over HTTP (for example <code>python3 -m http.server</code>) from the project root; opening the file directly from disk will not work.');
+    return;
+  }
+  if (!Array.isArray(raw)) {
+    fail("Snapshot malformed", 'Expected <code>data/models.json</code> to contain a JSON array of model records.');
+    return;
+  }
+  if (raw.length === 0) {
+    fail("Snapshot empty", 'The file <code>data/models.json</code> loaded successfully but contains no records. Re-run <code>scripts/fetch_snapshot.py</code> to repopulate it.');
+    return;
+  }
+
+  S.all = raw.map(m => {
+    const rec = {
+      id: String(m.id || ""),
+      author: author(m),
+      downloads: Number(m.downloads) || 0,
+      downloadsAllTime: Number(m.downloadsAllTime) || 0,
+      likes: Number(m.likes) || 0,
+      trendingScore: Number(m.trendingScore) || 0,
+      pipeline_tag: pipe(m),
+      library_name: m.library_name || null,
+      tags: Array.isArray(m.tags) ? m.tags : [],
+      lastModified: m.lastModified || null,
+      license: (m.license === null || m.license === undefined) ? null : m.license,
+      params: (typeof m.params === "number" && isFinite(m.params) && m.params > 0) ? m.params : null
+    };
+    /* one precomputed lowercase haystack — keeps search off the hot path */
+    rec._h = (rec.id + " " + rec.author + " " + rec.tags.join(" ") + " " + (rec.library_name || "") + " " + lic(rec)).toLowerCase();
+    return rec;
+  });
+
+  el("boot").hidden = true;
+  S.ready = true;
+  buildPipelines();
+  buildProviders();
+  renderTop();
+  renderGpu();
+  wire();
+  route();
+}
+
+/* ---------- derived data ---------- */
+function buildPipelines(){
+  const c = new Map();
+  S.all.forEach(m => {
+    const k = m.pipeline_tag === null ? "__none__" : m.pipeline_tag;
+    c.set(k, (c.get(k) || 0) + 1);
+  });
+  const list = [...c.entries()].sort((a,b) => b[1] - a[1]);
+  S.pipelines = list;
+  const sel = el("f-pipe");
+  let h = '<option value="__all__">all (' + S.all.length + ')</option>';
+  list.forEach(([k,n]) => {
+    h += '<option value="' + esc(k) + '">' + (k === "__none__" ? "(none)" : esc(k)) + ' (' + n + ')</option>';
+  });
+  sel.innerHTML = h;
+}
+
+function buildProviders(){
+  const map = new Map();
+  S.all.forEach(m => {
+    let e = map.get(m.author);
+    if (!e) { e = { author: m.author, count: 0, downloads: 0, downloadsAllTime: 0, likes: 0, pipes: new Map() }; map.set(m.author, e); }
+    e.count++; e.downloads += m.downloads; e.downloadsAllTime += m.downloadsAllTime; e.likes += m.likes;
+    const p = m.pipeline_tag || "(unclassified)";
+    e.pipes.set(p, (e.pipes.get(p) || 0) + 1);
+  });
+  S.providers = [...map.values()].map(e => {
+    let top = "—", best = -1;
+    e.pipes.forEach((n,k) => { if (n > best) { best = n; top = k; } });
+    e.topPipe = top;
+    e._h = e.author.toLowerCase();
+    return e;
+  }).sort((a,b) => b.downloads - a.downloads || b.downloadsAllTime - a.downloadsAllTime);
+}
+
+/* ============================================================
+   VIEW 1 — TOP 10
+   ============================================================ */
+function renderTop(){
+  const tg = S.all.filter(m => m.pipeline_tag === "text-generation");
+  const top = tg.slice().sort((a,b) => b.trendingScore - a.trendingScore || b.downloads - a.downloads).slice(0,10);
+
+  const latest = S.all.reduce((acc,m) => {
+    const t = m.lastModified ? Date.parse(m.lastModified) : NaN;
+    return (!isNaN(t) && t > acc) ? t : acc;
+  }, 0);
+  const totalDl = S.all.reduce((a,m) => a + m.downloads, 0);
+
+  el("top-ledger").innerHTML = [
+    ["Records", num(S.all.length)],
+    ["Providers", num(S.providers.length)],
+    ["Text-generation", num(tg.length)],
+    ["Downloads 30d", compact(totalDl)],
+    ["Snapshot", latest ? new Date(latest).toISOString().slice(0,10) : "—"]
+  ].map(([k,v]) => '<div><dt>' + esc(k) + '</dt><dd>' + esc(v) + '</dd></div>').join("");
+
+  const g = el("top-grid");
+  if (!top.length) { g.innerHTML = '<div class="empty">No text-generation models in this snapshot.</div>'; return; }
+
+  g.innerHTML = top.map((m,i) => {
+    const l = lic(m);
+    const unspec = l === "unspecified";
+    return '' +
+      '<article class="tile">' +
+        '<span class="trend" title="trendingScore">TS ' + esc(m.trendingScore) + '</span>' +
+        '<div class="tile-top">' +
+          '<span class="rank">' + rank(i) + '</span>' +
+          '<div class="mid">' +
+            '<div class="mname">' + esc(m.id) + '</div>' +
+            '<div class="mauth">' + esc(m.author) + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<dl class="metrics">' +
+          '<div class="metric"><dt>DL 30d</dt><dd title="' + esc(num(m.downloads)) + '">' + esc(compact(m.downloads)) + '</dd></div>' +
+          '<div class="metric"><dt>All time</dt><dd title="' + esc(num(m.downloadsAllTime)) + '">' + esc(compact(m.downloadsAllTime)) + '</dd></div>' +
+          '<div class="metric"><dt>Likes</dt><dd title="' + esc(num(m.likes)) + '">' + esc(compact(m.likes)) + '</dd></div>' +
+        '</dl>' +
+        '<div><span class="chip' + (unspec ? "" : " lit") + '" title="license">' + esc(l) + '</span></div>' +
+      '</article>';
+  }).join("");
+}
+
+/* ============================================================
+   VIEW 2 — MODEL INDEX
+   ============================================================ */
+function applyModels(){
+  const q = S.mQuery.trim().toLowerCase();
+  const terms = q ? q.split(/\s+/) : [];
+  const pipeSel = S.mPipe;
+
+  let out = S.all;
+  if (pipeSel !== "__all__") {
+    out = out.filter(m => pipeSel === "__none__" ? m.pipeline_tag === null : m.pipeline_tag === pipeSel);
+  }
+  if (terms.length) {
+    out = out.filter(m => { for (let i=0;i<terms.length;i++) if (m._h.indexOf(terms[i]) === -1) return false; return true; });
+  }
+  const k = S.mSort, d = S.mDir;
+  out = out.slice().sort((a,b) => (a[k] - b[k]) * d || a.id.localeCompare(b.id));
+  S.mFiltered = out;
+  const max = Math.max(1, Math.ceil(out.length / PER));
+  if (S.mPage > max) S.mPage = max;
+  renderModels();
+}
+
+function renderModels(){
+  const list = S.mFiltered, total = list.length;
+  const pages = Math.max(1, Math.ceil(total / PER));
+  const page = Math.min(S.mPage, pages);
+  const start = (page - 1) * PER;
+  const rows = list.slice(start, start + PER);
+
+  el("m-count").innerHTML = total
+    ? '<b>' + num(total) + '</b> of ' + num(S.all.length) + ' records &nbsp;·&nbsp; showing ' + num(start+1) + '–' + num(start + rows.length)
+    : '<b>0</b> of ' + num(S.all.length) + ' records';
+
+  const b = el("m-body");
+  if (!rows.length) {
+    b.innerHTML = '<tr><td colspan="10"><div class="empty">No model matches these filters. Clear the search box or reset the pipeline filter.</div></td></tr>';
+  } else {
+    b.innerHTML = rows.map((m,i) => {
+      const l = lic(m);
+      return '<tr>' +
+        '<td class="rk n">' + num(start + i + 1) + '</td>' +
+        '<td class="id">' + esc(m.id) + '</td>' +
+        '<td class="dim">' + esc(m.author) + '</td>' +
+        '<td><span class="tag">' + esc(m.pipeline_tag || "—") + '</span></td>' +
+        '<td class="n" title="' + esc(num(m.downloads)) + '">' + esc(compact(m.downloads)) + '</td>' +
+        '<td class="n" title="' + esc(num(m.downloadsAllTime)) + '">' + esc(compact(m.downloadsAllTime)) + '</td>' +
+        '<td class="n">' + esc(compact(m.likes)) + '</td>' +
+        '<td class="n">' + esc(m.trendingScore) + '</td>' +
+        '<td><span class="tag' + (l === "unspecified" ? " dim" : "") + '">' + esc(l) + '</span></td>' +
+        '<td class="n dim">' + esc(ymd(m.lastModified)) + '</td>' +
+      '</tr>';
+    }).join("");
+  }
+  pager(el("m-pager"), page, pages, total, p => { S.mPage = p; renderModels(); });
+}
+
+/* ============================================================
+   VIEW 3 — PROVIDERS
+   ============================================================ */
+function applyProviders(){
+  const q = S.pQuery.trim().toLowerCase();
+  S.pFiltered = q ? S.providers.filter(p => p._h.indexOf(q) !== -1) : S.providers;
+  const max = Math.max(1, Math.ceil(S.pFiltered.length / PER));
+  if (S.pPage > max) S.pPage = max;
+  renderProviders();
+}
+
+function renderProviders(){
+  const list = S.pFiltered;
+  const total = list.length;
+  const pages = Math.max(1, Math.ceil(total / PER));
+  const page = Math.min(S.pPage, pages);
+  const start = (page - 1) * PER;
+  const rows = list.slice(start, start + PER);
+
+  el("p-count").innerHTML = '<b>' + num(total) + '</b> providers' + (S.pQuery ? ' matching “' + esc(S.pQuery) + '”' : '') +
+    (rows.length ? ' &nbsp;·&nbsp; showing ' + num(start+1) + '–' + num(start + rows.length) : '');
+
+  const b = el("p-body");
+  if (!rows.length) {
+    b.innerHTML = '<tr><td colspan="7"><div class="empty">No provider matches that filter.</div></td></tr>';
+  } else {
+    b.innerHTML = rows.map((p,i) => '<tr>' +
+      '<td class="rk n">' + num(start + i + 1) + '</td>' +
+      '<td class="id">' + esc(p.author) + '</td>' +
+      '<td class="n">' + num(p.count) + '</td>' +
+      '<td class="n" title="' + esc(num(p.downloads)) + '">' + esc(compact(p.downloads)) + '</td>' +
+      '<td class="n" title="' + esc(num(p.downloadsAllTime)) + '">' + esc(compact(p.downloadsAllTime)) + '</td>' +
+      '<td class="n">' + esc(compact(p.likes)) + '</td>' +
+      '<td><span class="tag">' + esc(p.topPipe) + '</span></td>' +
+    '</tr>').join("");
+  }
+  pager(el("p-pager"), page, pages, total, p => { S.pPage = p; renderProviders(); });
+}
+
+/* ---------- shared pager ---------- */
+function pager(host, page, pages, total, go){
+  if (total === 0) { host.innerHTML = ""; return; }
+  const win = [];
+  const from = Math.max(1, Math.min(page - 2, pages - 4));
+  const to = Math.min(pages, Math.max(page + 2, 5));
+  for (let i = from; i <= to; i++) win.push(i);
+
+  host.innerHTML =
+    '<span class="pos">page ' + num(page) + ' / ' + num(pages) + '</span>' +
+    '<button class="btn mini" data-go="1" ' + (page === 1 ? "disabled" : "") + '>« first</button>' +
+    '<button class="btn mini" data-go="' + (page-1) + '" ' + (page === 1 ? "disabled" : "") + '>prev</button>' +
+    win.map(i => '<button class="btn mini" data-go="' + i + '"' +
+      (i === page ? ' style="border-color:var(--accent);color:var(--accent);background:var(--accent-soft)" aria-current="true"' : '') +
+      '>' + i + '</button>').join("") +
+    '<button class="btn mini" data-go="' + (page+1) + '" ' + (page === pages ? "disabled" : "") + '>next</button>' +
+    '<button class="btn mini" data-go="' + pages + '" ' + (page === pages ? "disabled" : "") + '>last »</button>';
+
+  host.onclick = ev => {
+    const btn = ev.target.closest("button[data-go]");
+    if (!btn || btn.disabled) return;
+    const p = parseInt(btn.dataset.go, 10);
+    if (!isNaN(p) && p >= 1 && p <= pages && p !== page) {
+      go(p);
+      const top = host.closest("section");
+      if (top) window.scrollTo({ top: top.offsetTop - 80, behavior: "smooth" });
+    }
+  };
+}
+
+/* ============================================================
+   VIEW 4 — GPU FIT
+   ============================================================
+   Each card has (a) a quantisation ladder it is willing to run —
+   highest quality first — and (b) a target VRAM utilisation that
+   reflects its class. A model's score combines how well it lands
+   in that target band with its popularity, so the three tables
+   surface genuinely different size classes rather than one list
+   repeated three times.
+   ============================================================ */
+const BPP = { FP16: 2.0, Q8: 1.07, Q6: 0.82, Q5: 0.72, Q4: 0.60 };
+const OVERHEAD = 1.5;
+const MIN_PARAMS = 1e8;   /* below this the record is a test stub, not a usable model */
+
+const CARDS = [
+  {
+    name: "RTX 3090", vram: 24, ladder: ["Q4"], target: 0.45, reserve: 0.97,
+    policy: "Ampere, 24 GB, no FP8 path — the conservative pick. Weights are budgeted at Q4 only and kept near 45 % of VRAM, leaving room for a long KV cache."
+  },
+  {
+    name: "RTX 4090", vram: 24, ladder: ["Q6","Q5"], target: 0.78, reserve: 0.97,
+    policy: "Ada, 24 GB. Same capacity as the 3090 but budgeted at Q5/Q6, so the list favours models that stay high-quality while filling ~78 % of VRAM."
+  },
+  {
+    name: "RTX 5090", vram: 32, ladder: ["Q8","Q6"], target: 0.85, reserve: 0.97,
+    policy: "Blackwell, 32 GB. Takes the highest quantisation that fits — Q8 up to ~27 B, Q6 for the 30 B class that no 24 GB card can hold at this quality."
+  }
+];
+
+function vramFor(paramsCount, q){ return (paramsCount / 1e9) * BPP[q] + OVERHEAD; }
+
+function gpuPool(){
+  return S.all.filter(m =>
+    m.pipeline_tag === "text-generation" &&
+    m.params !== null &&
+    m.params >= MIN_PARAMS &&
+    m.id.indexOf("tiny-random") === -1
+  );
+}
+
+function rankForCard(pool, card){
+  const cand = [];
+  for (const m of pool) {
+    let q = null;
+    for (const step of card.ladder) {
+      if (vramFor(m.params, step) <= card.vram * card.reserve) { q = step; break; }
+    }
+    if (!q) continue;
+    cand.push({ m: m, q: q, gb: vramFor(m.params, q), util: vramFor(m.params, q) / card.vram });
+  }
+  if (!cand.length) return [];
+  const maxDl = cand.reduce((a,c) => Math.max(a, Math.log10(c.m.downloads + 1)), 1);
+  const maxTs = cand.reduce((a,c) => Math.max(a, c.m.trendingScore), 1);
+  cand.forEach(c => {
+    const fit = Math.exp(-Math.pow(c.util - card.target, 2) / (2 * 0.14 * 0.14));
+    const pop = 0.75 * (Math.log10(c.m.downloads + 1) / maxDl) + 0.25 * (c.m.trendingScore / maxTs);
+    c.score = 0.62 * fit + 0.38 * pop;
+  });
+  cand.sort((a,b) => b.score - a.score || b.m.downloads - a.m.downloads);
+  return cand.slice(0,10);
+}
+
+function renderGpu(){
+  const pool = gpuPool();
+  const withParams = S.all.filter(m => m.pipeline_tag === "text-generation" && m.params !== null).length;
+
+  el("gpu-scope").innerHTML =
+    'Scope: <code>' + num(pool.length) + '</code> of ' + num(withParams) +
+    ' text-generation records that publish a parameter count (out of ' + num(S.all.length) +
+    ' records in the snapshot). Entries below 0.1 B parameters and <code>tiny-random</code> test stubs are excluded — a handful of repositories publish placeholder parameter counts that would otherwise rank as “fits everywhere”.';
+
+  const host = el("gpu-tables");
+  if (!pool.length) {
+    host.innerHTML = '<div class="state"><div class="glyph" aria-hidden="true">[ ∅ ]</div><h2>No sizing data</h2><p>No text-generation record in this snapshot publishes a parameter count, so VRAM estimates cannot be computed.</p></div>';
+    return;
+  }
+
+  host.innerHTML = CARDS.map(card => {
+    const rows = rankForCard(pool, card);
+    const body = rows.length ? rows.map((c,i) => {
+      const m = c.m, pB = paramsB(m.params);
+      const hot = c.util > 0.92;
+      return '<tr>' +
+        '<td class="rk n">' + rank(i) + '</td>' +
+        '<td class="id">' + esc(m.id) + '</td>' +
+        '<td class="dim">' + esc(m.author) + '</td>' +
+        '<td class="n">' + esc(pB.toFixed(pB < 10 ? 2 : 1)) + ' B</td>' +
+        '<td><span class="q">' + esc(c.q) + '</span></td>' +
+        '<td class="n"><b>' + esc(c.gb.toFixed(1)) + ' GB</b>' +
+          '<span class="bar' + (hot ? " hot" : "") + '" title="' + Math.round(c.util*100) + '% of ' + card.vram + ' GB"><i style="width:' + Math.min(100, Math.round(c.util*100)) + '%"></i></span></td>' +
+        '<td class="n dim">' + esc(vramFor(m.params,"Q4").toFixed(1)) + '</td>' +
+        '<td class="n dim">' + esc(vramFor(m.params,"Q8").toFixed(1)) + '</td>' +
+        '<td class="n dim">' + esc(vramFor(m.params,"FP16").toFixed(1)) + '</td>' +
+        '<td><span class="tag' + (lic(m) === "unspecified" ? " dim" : "") + '">' + esc(lic(m)) + '</span></td>' +
+      '</tr>';
+    }).join("") : '<tr><td colspan="10"><div class="empty">No model in the snapshot fits this card at its budgeted quantisation.</div></td></tr>';
+
+    return '' +
+    '<section class="gpu">' +
+      '<div class="gpu-head">' +
+        '<h3>' + esc(card.name) + '</h3>' +
+        '<span class="vram">' + card.vram + ' GB VRAM · budget ' + card.ladder.join(" → ") + '</span>' +
+        '<p class="policy">' + esc(card.policy) + '</p>' +
+      '</div>' +
+      '<div class="tw">' +
+        '<table><caption class="sr">' + esc(card.name) + ' top 10 fitting models</caption>' +
+        '<thead><tr>' +
+          '<th class="n">#</th><th>Model</th><th>Author</th><th class="n">Params</th>' +
+          '<th>Budgeted</th><th class="n">Est. VRAM</th>' +
+          '<th class="n">Q4 GB</th><th class="n">Q8 GB</th><th class="n">FP16 GB</th><th>License</th>' +
+        '</tr></thead><tbody>' + body + '</tbody></table>' +
+      '</div>' +
+    '</section>';
+  }).join("");
+}
+
+/* ============================================================
+   router + wiring
+   ============================================================ */
+const VIEWS = ["top","models","providers","gpu"];
+
+function route(){
+  if (!S.ready) return;
+  let v = (location.hash || "").replace(/^#\/?/, "").split("?")[0];
+  if (VIEWS.indexOf(v) === -1) v = "top";
+  VIEWS.forEach(name => { el("view-" + name).hidden = (name !== v); });
+  document.querySelectorAll(".tab").forEach(t => {
+    if (t.dataset.view === v) t.setAttribute("aria-current","page"); else t.removeAttribute("aria-current");
+  });
+  const t ={ top:"Top 10", models:"Model index", providers:"Providers", gpu:"GPU compatibility" }[v];
+  document.title = t + " — AnonModel";
+}
+
+function wire(){
+  window.addEventListener("hashchange", route);
+
+  const q = el("q");
+  q.addEventListener("input", debounce(() => { S.mQuery = q.value; S.mPage = 1; applyModels(); }, 150));
+  q.addEventListener("search", () => { S.mQuery = q.value; S.mPage = 1; applyModels(); });
+
+  el("f-pipe").addEventListener("change", e => { S.mPipe = e.target.value; S.mPage = 1; applyModels(); });
+  el("f-sort").addEventListener("change", e => { S.mSort = e.target.value; S.mPage = 1; applyModels(); });
+  el("f-dir").addEventListener("click", e => {
+    S.mDir = -S.mDir;
+    e.currentTarget.textContent = S.mDir === -1 ? "↓ desc" : "↑ asc";
+    e.currentTarget.setAttribute("aria-label", "Sort order: " + (S.mDir === -1 ? "descending" : "ascending"));
+    S.mPage = 1; applyModels();
+  });
+
+  const pq = el("pq");
+  pq.addEventListener("input", debounce(() => { S.pQuery = pq.value; S.pPage = 1; applyProviders(); }, 150));
+
+  applyModels();
+  applyProviders();
+  el("foot-sig").textContent = "ANONMODEL · " + num(S.all.length) + " RECORDS · STATIC SNAPSHOT";
+}
+
+/* ---------- signature element #2: the wordmark decodes once, on load ---------- */
+(function decodeWordmark(){
+  const node = el("wordmark");
+  if (!node) return;
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const plain = "ANONMODEL", GLYPHS = "▚▞ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#@%$&";
+  const final = ["ANON", "MODEL"];
+  let frame = 0;
+  const total = 22;
+  const timer = setInterval(() => {
+    frame++;
+    let out = "";
+    for (let i = 0; i < plain.length; i++) {
+      const settled = i < Math.floor(plain.length * (frame / total));
+      out += settled ? plain[i] : GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+    }
+    node.innerHTML = esc(out.slice(0,4)) + "<b>" + esc(out.slice(4)) + "</b>";
+    if (frame >= total) {
+      clearInterval(timer);
+      node.innerHTML = final[0] + "<b>" + final[1] + "</b>";
+    }
+  }, 34);
+})();
+
+boot();
+</script>
+</body>
+</html>
