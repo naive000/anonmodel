@@ -140,7 +140,7 @@ main{flex:1 0 auto;width:100%;max-width:var(--max);margin:0 auto;padding:calc(va
 /* ------------------------------------------------------------
    TOP-10 tiles (flat, sharp — deliberately not "cards")
    ------------------------------------------------------------ */
-.grid10{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.grid10{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
 .tile{background:var(--panel);padding:18px 18px 16px;display:flex;flex-direction:column;gap:12px;position:relative;transition:background .14s ease}
 .tile:hover{background:#12151A}
 .tile:hover .rank{color:var(--accent)}
@@ -415,7 +415,7 @@ footer strong{color:var(--text);font-weight:600}
 
     <div class="formula">
       <h3>Estimation formula</h3>
-      <div class="eq">VRAM<em>GB</em> &nbsp;≈&nbsp; params<em>B</em> &nbsp;×&nbsp; bytes_per_param &nbsp;+&nbsp; <em>1.5&nbsp;GB</em> runtime overhead</div>
+      <div class="eq">VRAM <span class="dim">(GB)</span> &nbsp;≈&nbsp; params <span class="dim">(billions)</span> &nbsp;×&nbsp; <em>bytes_per_param</em> &nbsp;+&nbsp; <em>1.5</em> <span class="dim">GB overhead</span></div>
       <dl class="bpp">
         <div><dt>FP16</dt><dd>2.00 <small>B/param</small></dd></div>
         <div><dt>Q8</dt><dd>1.07 <small>B/param</small></dd></div>
@@ -929,6 +929,15 @@ function wire(){
 
   const pq = el("pq");
   pq.addEventListener("input", debounce(() => { S.pQuery = pq.value; S.pPage = 1; applyProviders(); }, 150));
+
+  /* browsers restore form values across reloads — adopt them so the
+     controls and the rendered table can never disagree */
+  S.mQuery = q.value || "";
+  S.pQuery = pq.value || "";
+  const pSel = el("f-pipe");
+  if (pSel.value) S.mPipe = pSel.value;
+  const sSel = el("f-sort");
+  if (sSel.value) S.mSort = sSel.value;
 
   applyModels();
   applyProviders();
