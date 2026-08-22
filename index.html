@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>AnonModel — Open AI Model Data Station</title>
-<meta name="description" content="AnonModel is an unofficial, open-source data station for public AI models: trending text-generation rankings, a searchable index of 5,000+ models, provider leaderboards, and RTX 5090 / 4090 / 3090 VRAM compatibility tables. Data sourced from the Hugging Face public API.">
+<meta name="description" content="AnonModel is an unofficial, open-source data station for public AI models: trending rankings across text, vision, image, speech and video modalities, a searchable index of 5,000+ models, provider leaderboards, and RTX 5090 / 4090 / 3090 VRAM compatibility tables. Data sourced from the Hugging Face public API.">
 <meta name="color-scheme" content="dark">
 <meta name="robots" content="index, follow">
 <meta name="author" content="AnonModel">
@@ -12,7 +12,7 @@
 <link rel="canonical" href="./index.html">
 <meta property="og:type" content="website">
 <meta property="og:title" content="AnonModel — Open AI Model Data Station">
-<meta property="og:description" content="Trending models, a searchable index of 5,000+ records, provider leaderboards, and GPU VRAM fit tables. Unofficial mirror of the Hugging Face public API.">
+<meta property="og:description" content="Trending models across every modality, a searchable index of 5,000+ records, provider leaderboards, and GPU VRAM fit tables. Unofficial mirror of the Hugging Face public API.">
 <meta property="og:site_name" content="AnonModel">
 <meta name="twitter:card" content="summary">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2308090B'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='20' font-weight='700' fill='%235CE6A5' text-anchor='middle'%3EA%3C/text%3E%3C/svg%3E">
@@ -191,6 +191,64 @@ main{flex:1 0 auto;width:100%;max-width:var(--max);margin:0 auto;padding:calc(va
 }
 
 /* ------------------------------------------------------------
+   home sections — one config-driven band per modality
+   ------------------------------------------------------------ */
+.hs{margin:0 0 calc(var(--u)*6)}
+.hs:last-child{margin-bottom:0}
+.hs .sect{margin-top:0}
+.sect-l{min-width:0}
+.sect-l h2{margin-top:4px}
+.sect-r{display:flex;align-items:center;gap:14px;flex-wrap:wrap;min-width:0}
+.sect-r .note{min-width:0;overflow-wrap:anywhere}
+.sect .link{
+  font-family:var(--mono);font-size:11.5px;letter-spacing:.04em;
+  color:var(--accent);text-decoration:none;white-space:nowrap;
+  border:1px solid var(--accent-line);background:var(--accent-soft);
+  padding:6px 11px;border-radius:var(--r);
+  transition:background .12s ease;
+}
+.sect .link:hover{background:rgba(92,230,165,.19)}
+/* 5-up at full width — one tidy row per section instead of 4+1 */
+.grid5{grid-template-columns:repeat(auto-fill,minmax(min(224px,100%),1fr))}
+.grid5 .tile{padding:16px 15px 14px;gap:10px}
+/* the TS flag is absolutely positioned top-right; at this width the
+   model id would otherwise run underneath it */
+.grid5 .tile-top{padding-right:48px}
+.grid5 .metrics{gap:14px}
+.grid5 .tile .mname{font-size:12.5px}
+
+/* ------------------------------------------------------------
+   badges — AnonModel-inferred (amber) vs HF-published (neutral)
+   the accent green stays rationed; amber reads as "advisory"
+   ------------------------------------------------------------ */
+.badges{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.bdg{
+  display:inline-flex;align-items:center;gap:3px;vertical-align:middle;
+  font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  padding:2px 6px;border:1px solid var(--line-hi);border-radius:var(--r);
+  color:var(--muted);background:transparent;white-space:nowrap;cursor:help;
+}
+.bdg.unc{color:var(--warn);border-color:rgba(230,193,92,.40);background:rgba(230,193,92,.10)}
+.bdg .inf{font-size:9px;opacity:.9}
+td.id .bdg{margin-left:6px}
+
+/* one shared, body-level tooltip: the table wrapper scrolls and the
+   tile grid clips, so an in-flow tooltip would be cut off */
+.tip{
+  position:fixed;z-index:200;max-width:min(330px,calc(100vw - 24px));
+  background:#101317;border:1px solid var(--line-hi);border-radius:var(--r);
+  padding:9px 11px;font-size:12.5px;line-height:1.55;color:var(--text);
+  box-shadow:0 8px 26px rgba(0,0,0,.6);pointer-events:none;
+}
+.tip[hidden]{display:none}
+.tip b{
+  display:block;margin:0 0 4px;font-weight:600;
+  font-family:var(--mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--warn);
+}
+.tip.hf b{color:var(--accent)}
+
+/* ------------------------------------------------------------
    controls
    ------------------------------------------------------------ */
 .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin:0 0 calc(var(--u)*2)}
@@ -212,6 +270,7 @@ select{cursor:pointer;-webkit-appearance:none;appearance:none;padding-right:30px
   background-size:5px 5px,5px 5px;background-repeat:no-repeat;
 }
 .btn{cursor:pointer;white-space:nowrap}
+.btn[aria-pressed="true"]{color:var(--accent);border-color:var(--accent-line);background:var(--accent-soft)}
 .btn:disabled{opacity:.35;cursor:not-allowed}
 .btn.mini{padding:7px 10px;font-size:12px}
 .resultline{font-family:var(--mono);font-size:12px;color:var(--muted);margin:0 0 12px;font-variant-numeric:tabular-nums}
@@ -316,6 +375,9 @@ html[lang="zh-Hant"] .metric dt,
 html[lang="zh-Hant"] .formula h3,
 html[lang="zh-Hant"] .bpp dt,
 html[lang="zh-Hant"] footer .sig,
+html[lang="zh-Hant"] .bdg,
+html[lang="zh-Hant"] .tip b,
+html[lang="zh-Hant"] .sect .link,
 html[lang="zh-Hant"] .langsw button{letter-spacing:.08em}
 html[lang="zh-Hant"] thead th{letter-spacing:.05em}
 html[lang="zh-Hant"] .vh p{max-width:40em}
@@ -372,11 +434,11 @@ html[lang="zh-Hant"] .tab{letter-spacing:.02em}
   <section class="view" id="view-top" hidden aria-labelledby="top-h">
     <div class="vh">
       <p class="eyebrow"><span class="dot">▪</span> <span data-i18n="top.eyebrow">View 01 — trending</span></p>
-      <h1 id="top-h" data-i18n="top.h1">Top 10 text-generation models</h1>
-      <p data-i18n-html="top.intro">Ranked by the Hugging Face <span class="tag">trendingScore</span> at snapshot time, restricted to <span class="tag">pipeline_tag = text-generation</span>. Ties break on 30-day downloads.</p>
+      <h1 id="top-h" data-i18n="top.h1">Trending by modality</h1>
+      <p data-i18n-html="top.intro">Each band is the TOP 5 by Hugging Face <span class="tag">trendingScore</span> at snapshot time, ranked <em>within</em> its own <span class="tag">pipeline_tag</span>. Ties break on 30-day downloads.</p>
     </div>
     <dl class="ledger" id="top-ledger"></dl>
-    <div class="grid10" id="top-grid"></div>
+    <div id="home-sections"></div>
   </section>
 
   <!-- 2. MODEL LIST -->
@@ -406,7 +468,11 @@ html[lang="zh-Hant"] .tab{letter-spacing:.02em}
       </div>
       <div class="field">
         <label for="f-dir" data-i18n="models.order">Order</label>
-        <button class="btn" id="f-dir" aria-label="Sort order: descending">↓ desc</button>
+        <button class="btn" id="f-dir" type="button" aria-label="Sort order: descending">↓ desc</button>
+      </div>
+      <div class="field">
+        <label for="f-unc" data-i18n="models.flags">Filter</label>
+        <button class="btn" id="f-unc" type="button" aria-pressed="false" aria-label="Uncensored-only filter: off">▢ uncensored only</button>
       </div>
     </div>
     <p class="resultline" id="m-count"></p>
@@ -487,6 +553,8 @@ html[lang="zh-Hant"] .tab{letter-spacing:.02em}
   </div>
 </footer>
 
+<div class="tip" id="tip" role="tooltip" aria-hidden="true" hidden></div>
+
 <script>
 "use strict";
 /* ============================================================
@@ -511,12 +579,12 @@ en: {
   "lang.aria":"Interface language",
   "lang.en.aria":"Switch interface to English",
   "lang.zh.aria":"Switch interface to Traditional Chinese",
-  "tab.top":"~/top-10",
+  "tab.top":"~/trending",
   "tab.models":"~/models",
   "tab.providers":"~/providers",
   "tab.gpu":"~/gpu-fit",
-  "meta.desc":"AnonModel is an unofficial, open-source data station for public AI models: trending text-generation rankings, a searchable index of 5,000+ models, provider leaderboards, and RTX 5090 / 4090 / 3090 VRAM compatibility tables. Data sourced from the Hugging Face public API.",
-  "title.top":"Top 10",
+  "meta.desc":"AnonModel is an unofficial, open-source data station for public AI models: trending rankings across text, vision, image, speech and video modalities, a searchable index of 5,000+ models, provider leaderboards, and RTX 5090 / 4090 / 3090 VRAM compatibility tables. Data sourced from the Hugging Face public API.",
+  "title.top":"Trending",
   "title.models":"Model index",
   "title.providers":"Providers",
   "title.gpu":"GPU compatibility",
@@ -535,11 +603,12 @@ en: {
 
   /* view 01 */
   "top.eyebrow":"View 01 — trending",
-  "top.h1":"Top 10 text-generation models",
-  "top.intro":'Ranked by the Hugging Face <span class="tag">trendingScore</span> at snapshot time, restricted to <span class="tag">pipeline_tag = text-generation</span>. Ties break on 30-day downloads.',
+  "top.h1":"Trending by modality",
+  "top.intro":'Each band is the TOP 5 by Hugging Face <span class="tag">trendingScore</span> at snapshot time, ranked <em>within</em> its own <span class="tag">pipeline_tag</span>. Ties break on 30-day downloads. Bulk classifier families (<span class="tag">token-classification</span>, <span class="tag">fill-mask</span>) are left to the model index rather than curated here.',
   "led.records":"Records",
   "led.providers":"Providers",
   "led.textgen":"Text-generation",
+  "led.uncensored":"Uncensored · inferred",
   "led.dl30":"Downloads 30d",
   "led.snapshot":"Snapshot",
   "tile.dl30":"DL 30d",
@@ -547,17 +616,33 @@ en: {
   "tile.likes":"Likes",
   "tile.tsTitle":"trendingScore",
   "tile.licTitle":"License",
-  "empty.top":"No text-generation models in this snapshot.",
+
+  /* home sections — labels are UI chrome; the raw pipeline_tag strings
+     shown beside them are data and stay identical in both languages */
+  "home.eyebrow":"Section {n} — {name}",
+  "home.sec.textgen":"Text generation",
+  "home.sec.vlm":"Vision-language",
+  "home.sec.t2i":"Image generation",
+  "home.sec.audio":"Speech & audio",
+  "home.sec.video":"Video generation",
+  "home.sec.embed":"Embeddings",
+  "home.sec.unc":"Trending uncensored",
+  "home.pool":"{n} records",
+  "home.scope.unc":"AnonModel inference · uncensored = true",
+  "home.viewAll":"view all →",
+  "home.viewAll.aria":"View all uncensored models in the model index",
+  "empty.section":"No record in this snapshot matches these tags.",
 
   /* view 02 */
   "models.eyebrow":"View 02 — index",
   "models.h1":"Model index",
-  "models.intro":"The full snapshot. Search matches model id, author and tags; results are paginated at 50 rows.",
+  "models.intro":"The full snapshot. Search matches model id, author and tags; results are paginated at 50 rows. The uncensored filter applies AnonModel's own inference — it is not a Hugging Face field.",
   "models.search":"Search",
   "models.searchPh":"qwen · meta-llama · gguf · apache-2.0",
   "models.pipeline":"Pipeline",
   "models.sortBy":"Sort by",
   "models.order":"Order",
+  "models.flags":"Filter",
   "models.caption":"Model index",
   "sort.downloads":"downloads (30d)",
   "sort.downloadsAllTime":"downloads (all time)",
@@ -567,6 +652,9 @@ en: {
   "dir.asc":"↑ asc",
   "dir.desc.aria":"Sort order: descending",
   "dir.asc.aria":"Sort order: ascending",
+  "filter.unc":"uncensored only",
+  "filter.unc.on":"Uncensored-only filter: on",
+  "filter.unc.off":"Uncensored-only filter: off",
   "pipe.all":"all ({n})",
   "pipe.none":"(none)",
   "count.models":"<b>{n}</b> of {total} records &nbsp;·&nbsp; showing {from}–{to}",
@@ -627,6 +715,21 @@ en: {
   "gpu.policy.4090":"Ada, 24 GB. Same capacity as the 3090 but budgeted at Q5/Q6, so the list favours models that stay high-quality while filling ~78 % of VRAM.",
   "gpu.policy.5090":"Blackwell, 32 GB. Takes the highest quantisation that fits — Q8 up to ~27 B, Q6 for the 30 B class that no 24 GB card can hold at this quality.",
 
+  /* badges + their tooltips.
+     "uncensored" is computed BY ANONMODEL from ids/tags/lineage and is
+     always presented as an inference; "gated" is a real Hugging Face
+     API field and is presented as published. The two tooltips deliberately
+     say opposite things about provenance. */
+  "badge.unc":"uncensored",
+  "badge.gated":"gated",
+  "tip.inferred":"AnonModel inference — not published by Hugging Face",
+  "tip.hf":"Published by Hugging Face",
+  "unc.reason.self":"Self-tagged: the model's own id or tags declare it uncensored / abliterated / unfiltered.",
+  "unc.reason.nfaa":"Carries a not-for-all-audiences content tag on the Hub.",
+  "unc.reason.lineage":"Derived from {parent}, which AnonModel flagged as uncensored.",
+  "unc.reason.unknown":"Flagged by AnonModel; no reason was recorded for this record.",
+  "gated.body":"Access is gated on Hugging Face — the author's terms must be accepted before the weights can be downloaded. Raw field value: gated = {raw}.",
+
   /* synthesised fallbacks — NOT API values, so they are UI chrome */
   "val.unknownAuthor":"(unknown)",
   "val.unspecifiedLic":"unspecified",
@@ -643,12 +746,12 @@ zh: {
   "lang.aria":"介面語言",
   "lang.en.aria":"將介面切換為英文",
   "lang.zh.aria":"將介面切換為繁體中文",
-  "tab.top":"~/熱門十大",
+  "tab.top":"~/熱門",
   "tab.models":"~/模型索引",
   "tab.providers":"~/供應商",
   "tab.gpu":"~/顯卡適配",
-  "meta.desc":"AnonModel 是非官方的開源 AI 模型資料站：文字生成模型熱門排行、5,000 筆以上模型的可搜尋索引、供應商排行榜，以及 RTX 5090 / 4090 / 3090 的 VRAM 相容性對照表。資料取自 Hugging Face 公開 API。",
-  "title.top":"熱門十大",
+  "meta.desc":"AnonModel 是非官方的開源 AI 模型資料站：涵蓋文字、視覺、圖片、語音與影片各模態的熱門排行、5,000 筆以上模型的可搜尋索引、供應商排行榜，以及 RTX 5090 / 4090 / 3090 的 VRAM 相容性對照表。資料取自 Hugging Face 公開 API。",
+  "title.top":"熱門",
   "title.models":"模型索引",
   "title.providers":"供應商",
   "title.gpu":"顯示卡相容性",
@@ -665,11 +768,12 @@ zh: {
   "err.nosizing.body":"這份快照中沒有任何文字生成模型公開參數量，因此無法估算 VRAM 需求。",
 
   "top.eyebrow":"檢視 01 — 熱門趨勢",
-  "top.h1":"文字生成模型熱門十大",
-  "top.intro":'依快照當下的 Hugging Face <span class="tag">trendingScore</span> 排名，僅收錄 <span class="tag">pipeline_tag = text-generation</span> 的模型。分數相同時以 30 天下載量決勝。',
+  "top.h1":"各模態熱門模型",
+  "top.intro":'每一區塊都是該 <span class="tag">pipeline_tag</span> <em>類別內</em>、依快照當下 Hugging Face <span class="tag">trendingScore</span> 排名的前 5 名。分數相同時以 30 天下載量決勝。大宗分類器家族（<span class="tag">token-classification</span>、<span class="tag">fill-mask</span>）不列入首頁精選，請到模型索引查閱。',
   "led.records":"收錄筆數",
   "led.providers":"供應商",
   "led.textgen":"文字生成",
+  "led.uncensored":"無審查 · 推定",
   "led.dl30":"30 天下載",
   "led.snapshot":"快照日期",
   "tile.dl30":"30 天下載",
@@ -677,16 +781,30 @@ zh: {
   "tile.likes":"按讚數",
   "tile.tsTitle":"熱門分數 trendingScore",
   "tile.licTitle":"授權條款",
-  "empty.top":"這份快照中沒有文字生成模型。",
+
+  "home.eyebrow":"區塊 {n} — {name}",
+  "home.sec.textgen":"文字生成",
+  "home.sec.vlm":"視覺多模態",
+  "home.sec.t2i":"圖片生成",
+  "home.sec.audio":"語音",
+  "home.sec.video":"影片",
+  "home.sec.embed":"向量嵌入",
+  "home.sec.unc":"無審查熱門",
+  "home.pool":"{n} 筆",
+  "home.scope.unc":"AnonModel 推定 · uncensored = true",
+  "home.viewAll":"查看全部 →",
+  "home.viewAll.aria":"到模型索引查看全部無審查模型",
+  "empty.section":"這份快照中沒有符合這些標籤的記錄。",
 
   "models.eyebrow":"檢視 02 — 索引",
   "models.h1":"模型索引",
-  "models.intro":"完整快照。搜尋會比對模型 id、發布者與標籤；結果每頁 50 筆。",
+  "models.intro":"完整快照。搜尋會比對模型 id、發布者與標籤；結果每頁 50 筆。「只看無審查」篩選用的是 AnonModel 自行推定的結果，並非 Hugging Face 提供的欄位。",
   "models.search":"搜尋",
   "models.searchPh":"例如 qwen · meta-llama · gguf · apache-2.0",
   "models.pipeline":"任務類型",
   "models.sortBy":"排序依據",
   "models.order":"排序方向",
+  "models.flags":"標記篩選",
   "models.caption":"模型索引",
   "sort.downloads":"下載量（30 天）",
   "sort.downloadsAllTime":"下載量（歷來累計）",
@@ -696,6 +814,9 @@ zh: {
   "dir.asc":"↑ 遞增",
   "dir.desc.aria":"排序方向：由大到小",
   "dir.asc.aria":"排序方向：由小到大",
+  "filter.unc":"只看無審查",
+  "filter.unc.on":"只看無審查篩選：已開啟",
+  "filter.unc.off":"只看無審查篩選：已關閉",
   "pipe.all":"全部（{n}）",
   "pipe.none":"（未標註）",
   "count.models":"<b>{n}</b> / {total} 筆記錄 &nbsp;·&nbsp; 顯示第 {from}–{to} 筆",
@@ -751,6 +872,16 @@ zh: {
   "gpu.policy.3090":"Ampere 架構，24 GB，沒有 FP8 路徑 — 保守的選擇。權重一律以 Q4 編列預算，並控制在 VRAM 的 45 % 左右，留出空間給較長的 KV cache。",
   "gpu.policy.4090":"Ada 架構，24 GB。容量與 3090 相同，但以 Q5／Q6 編列預算，因此榜單偏好那些能維持高品質、同時把 VRAM 用到約 78 % 的模型。",
   "gpu.policy.5090":"Blackwell 架構，32 GB。採用塞得下的最高量化等級 — 約 27 B 以下走 Q8，30 B 級距則走 Q6，這個品質是任何 24 GB 顯示卡都裝不下的。",
+
+  "badge.unc":"無審查",
+  "badge.gated":"需授權",
+  "tip.inferred":"AnonModel 推定 — 非 Hugging Face 官方標註",
+  "tip.hf":"Hugging Face 官方欄位",
+  "unc.reason.self":"自我標記：模型自己的 id 或標籤宣告為 uncensored／abliterated／unfiltered。",
+  "unc.reason.nfaa":"在 Hub 上帶有敏感內容標籤（not-for-all-audiences）。",
+  "unc.reason.lineage":"衍生自 {parent}，AnonModel 已將該上游模型判定為無審查。",
+  "unc.reason.unknown":"由 AnonModel 標記，但這筆記錄沒有留下判定依據。",
+  "gated.body":"此模型在 Hugging Face 上採管制存取 — 必須先同意作者條款才能下載權重。原始欄位值：gated = {raw}。",
 
   "val.unknownAuthor":"（不明）",
   "val.unspecifiedLic":"未指定",
@@ -879,7 +1010,7 @@ const S = {
   all: [],
   pipelines: [],
   providers: [],
-  mPage: 1, mSort: "downloads", mDir: -1, mQuery: "", mPipe: "__all__", mFiltered: [],
+  mPage: 1, mSort: "downloads", mDir: -1, mQuery: "", mPipe: "__all__", mUnc: false, mFiltered: [],
   pPage: 1, pQuery: "", pFiltered: [],
   ready: false
 };
@@ -927,7 +1058,13 @@ async function boot(){
       tags: Array.isArray(m.tags) ? m.tags : [],
       lastModified: m.lastModified || null,
       license: (m.license === null || m.license === undefined) ? null : m.license,
-      params: (typeof m.params === "number" && isFinite(m.params) && m.params > 0) ? m.params : null
+      params: (typeof m.params === "number" && isFinite(m.params) && m.params > 0) ? m.params : null,
+      /* HF-published: false | "manual" | "auto" — bare true never observed,
+         so gating is tested as `!== false`, never `=== true` */
+      gated: (m.gated === undefined || m.gated === null) ? false : m.gated,
+      /* ANONMODEL-COMPUTED, not published by Hugging Face */
+      uncensored: m.uncensored === true,
+      uncensored_reason: (typeof m.uncensored_reason === "string" && m.uncensored_reason) ? m.uncensored_reason : null
     };
     /* one precomputed lowercase haystack — keeps search off the hot path */
     rec._h = (rec.id + " " + rec.author + " " + rec.tags.join(" ") + " " + (rec.library_name || "") + " " + lic(rec)).toLowerCase();
@@ -939,7 +1076,7 @@ async function boot(){
   S.ready = true;
   buildPipelines();
   buildProviders();
-  renderTop();
+  renderHome();
   renderGpu();
   wire();
   route();
@@ -1005,15 +1142,116 @@ function buildProviders(){
 }
 
 /* ============================================================
-   VIEW 1 — TOP 10
+   BADGES — the two flags that travel with a model everywhere
+   ============================================================
+   `uncensored` / `uncensored_reason` are computed BY ANONMODEL from a
+   model's id, its tags and its base_model lineage. Hugging Face does
+   not publish such a field, so every surface that shows the badge also
+   carries the "inference" marker and says so in the tooltip.
+   `gated` is the opposite case — a real API field — and its tooltip
+   attributes it to Hugging Face and quotes the raw value verbatim.
    ============================================================ */
-function renderTop(){
+
+/* returns { head, body } — both are UI chrome except the parent id
+   interpolated into the lineage reason, which is raw data */
+function uncTip(m){
+  const r = m.uncensored_reason;
+  let body;
+  if (r && r.indexOf("lineage:") === 0) {
+    body = t("unc.reason.lineage", { parent: r.slice("lineage:".length) });
+  } else if (r === "self-tagged") {
+    body = t("unc.reason.self");
+  } else if (r === "nfaa-tag") {
+    body = t("unc.reason.nfaa");
+  } else {
+    body = t("unc.reason.unknown");
+  }
+  return { head: t("tip.inferred"), body: body };
+}
+function gatedTip(m){
+  return { head: t("tip.hf"), body: t("gated.body", { raw: String(m.gated) }) };
+}
+function bdg(cls, label, tip, hf){
+  return '<span class="bdg ' + cls + '" tabindex="0" role="note"' +
+    (hf ? ' data-hf="1"' : '') +
+    ' data-th="' + esc(tip.head) + '" data-tb="' + esc(tip.body) + '"' +
+    ' aria-label="' + esc(tip.head + " — " + tip.body) + '">' + esc(label) +
+    (hf ? '' : '<span class="inf" aria-hidden="true">†</span>') +
+    '</span>';
+}
+function badges(m){
+  let h = "";
+  if (m.uncensored) h += bdg("unc", t("badge.unc"), uncTip(m), false);
+  if (m.gated !== false) h += bdg("gate", t("badge.gated"), gatedTip(m), true);
+  return h;
+}
+
+/* ============================================================
+   VIEW 1 — HOME: one trending band per modality
+   ============================================================
+   Adding a band is a data change: push an entry onto HOME_SECTIONS.
+   `pipes` holds raw pipeline_tag values (matched exactly, never
+   translated); `label` is an i18n key. token-classification and
+   fill-mask are deliberately absent — legacy-BERT bulk belongs to the
+   index view (coverage), not to the home view (curation).
+   ============================================================ */
+const HOME_SECTIONS = [
+  { key: "textgen", label: "home.sec.textgen", pipes: ["text-generation"] },
+  { key: "vlm",     label: "home.sec.vlm",     pipes: ["image-text-to-text"] },
+  { key: "t2i",     label: "home.sec.t2i",     pipes: ["text-to-image"] },
+  { key: "audio",   label: "home.sec.audio",   pipes: ["text-to-speech","automatic-speech-recognition"] },
+  { key: "video",   label: "home.sec.video",   pipes: ["text-to-video"] },
+  { key: "embed",   label: "home.sec.embed",   pipes: ["feature-extraction","sentence-similarity"] },
+  { key: "unc",     label: "home.sec.unc",     unc: true, link: "#/models?unc=1", linkLabel: "home.viewAll", linkAria: "home.viewAll.aria" }
+];
+const HOME_N = 5;
+
+function sectionPool(sec){
+  return sec.unc
+    ? S.all.filter(m => m.uncensored)
+    : S.all.filter(m => m.pipeline_tag !== null && sec.pipes.indexOf(m.pipeline_tag) !== -1);
+}
+
+/* same anti-washout ranking everywhere: trendingScore within the subset,
+   never raw downloads, so legacy/embedding bulk cannot wash the band out */
+function sectionTop(pool){
+  return pool.slice()
+    .sort((a,b) => b.trendingScore - a.trendingScore || b.downloads - a.downloads || a.id.localeCompare(b.id))
+    .slice(0, HOME_N);
+}
+
+function tile(m, i){
+  const l = lic(m);
+  const unspec = l === "unspecified";
+  return '' +
+    '<article class="tile">' +
+      '<span class="trend" title="' + esc(t("tile.tsTitle")) + '">TS ' + esc(m.trendingScore) + '</span>' +
+      '<div class="tile-top">' +
+        '<span class="rank">' + rank(i) + '</span>' +
+        '<div class="mid">' +
+          '<div class="mname">' + esc(m.id) + '</div>' +
+          '<div class="mauth">' + esc(dAuthor(m.author)) + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<dl class="metrics">' +
+        '<div class="metric"><dt>' + esc(t("tile.dl30")) + '</dt><dd title="' + esc(num(m.downloads)) + '">' + esc(compact(m.downloads)) + '</dd></div>' +
+        '<div class="metric"><dt>' + esc(t("tile.allTime")) + '</dt><dd title="' + esc(num(m.downloadsAllTime)) + '">' + esc(compact(m.downloadsAllTime)) + '</dd></div>' +
+        '<div class="metric"><dt>' + esc(t("tile.likes")) + '</dt><dd title="' + esc(num(m.likes)) + '">' + esc(compact(m.likes)) + '</dd></div>' +
+      '</dl>' +
+      '<div class="badges">' +
+        '<span class="chip' + (unspec ? "" : " lit") + '" title="' + esc(t("tile.licTitle")) + '">' + esc(dLic(l)) + '</span>' +
+        badges(m) +
+      '</div>' +
+    '</article>';
+}
+
+function renderHome(){
   const tg = S.all.filter(m => m.pipeline_tag === "text-generation");
-  const top = tg.slice().sort((a,b) => b.trendingScore - a.trendingScore || b.downloads - a.downloads).slice(0,10);
+  const unc = S.all.filter(m => m.uncensored);
 
   const latest = S.all.reduce((acc,m) => {
-    const t = m.lastModified ? Date.parse(m.lastModified) : NaN;
-    return (!isNaN(t) && t > acc) ? t : acc;
+    const ts = m.lastModified ? Date.parse(m.lastModified) : NaN;
+    return (!isNaN(ts) && ts > acc) ? ts : acc;
   }, 0);
   const totalDl = S.all.reduce((a,m) => a + m.downloads, 0);
 
@@ -1021,33 +1259,40 @@ function renderTop(){
     [t("led.records"), num(S.all.length)],
     [t("led.providers"), num(S.providers.length)],
     [t("led.textgen"), num(tg.length)],
+    [t("led.uncensored"), num(unc.length)],
     [t("led.dl30"), compact(totalDl)],
     [t("led.snapshot"), latest ? new Date(latest).toISOString().slice(0,10) : "—"]
   ].map(([k,v]) => '<div><dt>' + esc(k) + '</dt><dd>' + esc(v) + '</dd></div>').join("");
 
-  const g = el("top-grid");
-  if (!top.length) { g.innerHTML = '<div class="empty">' + esc(t("empty.top")) + '</div>'; return; }
+  el("home-sections").innerHTML = HOME_SECTIONS.map((sec, idx) => {
+    const pool = sectionPool(sec);
+    const rows = sectionTop(pool);
+    /* the scope note prints the raw pipeline_tag strings — data, so it
+       reads identically in both interface languages */
+    const scope = sec.unc ? t("home.scope.unc") : sec.pipes.join("  ·  ");
+    const body = rows.length
+      ? rows.map((m,i) => tile(m,i)).join("")
+      : '<div class="empty">' + esc(t("empty.section")) + '</div>';
 
-  g.innerHTML = top.map((m,i) => {
-    const l = lic(m);
-    const unspec = l === "unspecified";
     return '' +
-      '<article class="tile">' +
-        '<span class="trend" title="' + esc(t("tile.tsTitle")) + '">TS ' + esc(m.trendingScore) + '</span>' +
-        '<div class="tile-top">' +
-          '<span class="rank">' + rank(i) + '</span>' +
-          '<div class="mid">' +
-            '<div class="mname">' + esc(m.id) + '</div>' +
-            '<div class="mauth">' + esc(dAuthor(m.author)) + '</div>' +
-          '</div>' +
+    '<section class="hs" aria-labelledby="hs-' + esc(sec.key) + '">' +
+      '<div class="sect">' +
+        '<div class="sect-l">' +
+          '<p class="eyebrow"><span class="dot">▪</span> ' +
+            esc(t("home.eyebrow", { n: String(idx+1).padStart(2,"0"), name: t(sec.label) })) +
+          '</p>' +
+          '<h2 id="hs-' + esc(sec.key) + '">' + esc(t(sec.label)) + '</h2>' +
         '</div>' +
-        '<dl class="metrics">' +
-          '<div class="metric"><dt>' + esc(t("tile.dl30")) + '</dt><dd title="' + esc(num(m.downloads)) + '">' + esc(compact(m.downloads)) + '</dd></div>' +
-          '<div class="metric"><dt>' + esc(t("tile.allTime")) + '</dt><dd title="' + esc(num(m.downloadsAllTime)) + '">' + esc(compact(m.downloadsAllTime)) + '</dd></div>' +
-          '<div class="metric"><dt>' + esc(t("tile.likes")) + '</dt><dd title="' + esc(num(m.likes)) + '">' + esc(compact(m.likes)) + '</dd></div>' +
-        '</dl>' +
-        '<div><span class="chip' + (unspec ? "" : " lit") + '" title="' + esc(t("tile.licTitle")) + '">' + esc(dLic(l)) + '</span></div>' +
-      '</article>';
+        '<div class="sect-r">' +
+          '<span class="note">' + esc(scope) + ' &nbsp;·&nbsp; ' + esc(t("home.pool", { n: num(pool.length) })) + '</span>' +
+          (sec.link
+            ? '<a class="link" href="' + esc(sec.link) + '" aria-label="' + esc(t(sec.linkAria)) + '">' + esc(t(sec.linkLabel)) + '</a>'
+            : '') +
+        '</div>' +
+      '</div>' +
+      '<div class="rule"></div>' +
+      '<div class="grid10 grid5">' + body + '</div>' +
+    '</section>';
   }).join("");
 }
 
@@ -1063,6 +1308,9 @@ function applyModels(){
   if (pipeSel !== "__all__") {
     out = out.filter(m => pipeSel === "__none__" ? m.pipeline_tag === null : m.pipeline_tag === pipeSel);
   }
+  /* AnonModel's own inference — stacks with the search box and the
+     pipeline dropdown rather than replacing either */
+  if (S.mUnc) out = out.filter(m => m.uncensored);
   if (terms.length) {
     out = out.filter(m => { for (let i=0;i<terms.length;i++) if (m._h.indexOf(terms[i]) === -1) return false; return true; });
   }
@@ -1093,7 +1341,7 @@ function renderModels(){
       const l = lic(m);
       return '<tr>' +
         '<td class="rk n">' + num(start + i + 1) + '</td>' +
-        '<td class="id">' + esc(m.id) + '</td>' +
+        '<td class="id">' + esc(m.id) + badges(m) + '</td>' +
         '<td class="dim">' + esc(dAuthor(m.author)) + '</td>' +
         '<td><span class="tag">' + esc(m.pipeline_tag || "—") + '</span></td>' +
         '<td class="n" title="' + esc(num(m.downloads)) + '">' + esc(compact(m.downloads)) + '</td>' +
@@ -1254,7 +1502,7 @@ function renderGpu(){
       const hot = c.util > 0.92;
       return '<tr>' +
         '<td class="rk n">' + rank(i) + '</td>' +
-        '<td class="id">' + esc(m.id) + '</td>' +
+        '<td class="id">' + esc(m.id) + badges(m) + '</td>' +
         '<td class="dim">' + esc(dAuthor(m.author)) + '</td>' +
         '<td class="n">' + esc(pB.toFixed(pB < 10 ? 2 : 1)) + ' B</td>' +
         '<td><span class="q">' + esc(c.q) + '</span></td>' +
@@ -1293,10 +1541,29 @@ function renderGpu(){
    ============================================================ */
 const VIEWS = ["top","models","providers","gpu"];
 
+/* The hash carries an optional query string — currently only `unc=1`,
+   which pre-applies the uncensored filter on the index view. It is the
+   authority: arriving at #/models without it clears the filter, so a
+   link, a bookmark and the toggle can never disagree. */
 function route(){
   if (!S.ready) return;
-  let v = (location.hash || "").replace(/^#\/?/, "").split("?")[0];
+  const raw = (location.hash || "").replace(/^#\/?/, "");
+  const cut = raw.indexOf("?");
+  let v = cut === -1 ? raw : raw.slice(0, cut);
+  const qs = cut === -1 ? "" : raw.slice(cut + 1);
   if (VIEWS.indexOf(v) === -1) v = "top";
+
+  if (v === "models") {
+    const want = /(?:^|&)unc=1(?:&|$)/.test(qs);
+    if (want !== S.mUnc) {
+      S.mUnc = want;
+      syncUnc();
+      S.mPage = 1;
+      applyModels();
+    }
+  }
+
+  tipHide();
   VIEWS.forEach(name => { el("view-" + name).hidden = (name !== v); });
   document.querySelectorAll(".tab").forEach(t => {
     if (t.dataset.view === v) t.setAttribute("aria-current","page"); else t.removeAttribute("aria-current");
@@ -1331,6 +1598,7 @@ function applyStatics(){
     b.setAttribute("aria-label", t("lang." + b.dataset.lang + ".aria"));
   });
   syncDir();
+  syncUnc();
 }
 
 /* the order button's label and aria-label live in two states × two
@@ -1343,16 +1611,116 @@ function syncDir(){
   b.setAttribute("aria-label", t("dir." + k + ".aria"));
 }
 
+/* same contract for the uncensored toggle: label, pressed state and
+   aria-label are written in exactly one place, so a language swap or a
+   deep link can never leave the control disagreeing with the table */
+function syncUnc(){
+  const b = el("f-unc");
+  if (!b) return;
+  b.textContent = (S.mUnc ? "▣ " : "▢ ") + t("filter.unc");
+  b.setAttribute("aria-pressed", S.mUnc ? "true" : "false");
+  b.setAttribute("aria-label", t(S.mUnc ? "filter.unc.on" : "filter.unc.off"));
+}
+
+/* keep the address bar in step without firing hashchange (which would
+   re-enter route() and re-apply what we just applied) */
+function syncHash(){
+  if (!window.history || !history.replaceState) return;
+  const cur = location.hash || "";
+  if (cur.replace(/^#\/?/, "").split("?")[0] !== "models") return;
+  const want = "#/models" + (S.mUnc ? "?unc=1" : "");
+  if (cur !== want) history.replaceState(null, "", want);
+}
+
+/* ============================================================
+   badge tooltip — one node, appended to <body>
+   ============================================================
+   The table wrapper scrolls (overflow-x:auto) and the tile grid clips
+   (overflow:hidden), so a tooltip rendered next to the badge would be
+   cut off. A single fixed-position node outside both, positioned from
+   the badge's client rect, is immune to either. Shown on hover AND on
+   keyboard focus — a title attribute only satisfies the first.
+   ============================================================ */
+let TIP_ANCHOR = null;
+
+function tipPlace(node){
+  const host = el("tip");
+  const r = node.getBoundingClientRect();
+  const w = host.offsetWidth, h = host.offsetHeight;
+  /* prefer above the badge, fall back to below — then clamp on both
+     axes so the tooltip is on screen even if the anchor is not */
+  let left = r.left + r.width / 2 - w / 2;
+  left = Math.max(8, Math.min(left, window.innerWidth - w - 8));
+  let top = r.top - h - 8;
+  if (top < 8) top = r.bottom + 8;
+  top = Math.max(8, Math.min(top, window.innerHeight - h - 8));
+  host.style.left = Math.round(left) + "px";
+  host.style.top = Math.round(top) + "px";
+}
+function tipShow(node){
+  const host = el("tip");
+  if (!host) return;
+  host.textContent = "";
+  const head = document.createElement("b");
+  head.textContent = node.getAttribute("data-th") || "";
+  const body = document.createElement("span");
+  body.textContent = node.getAttribute("data-tb") || "";
+  host.appendChild(head);
+  host.appendChild(body);
+  host.className = "tip" + (node.getAttribute("data-hf") ? " hf" : "");
+  host.hidden = false;
+  TIP_ANCHOR = node;
+  tipPlace(node);
+}
+function tipHide(){
+  TIP_ANCHOR = null;
+  const host = el("tip");
+  if (host) host.hidden = true;
+}
+/* Tabbing to a badge scrolls it into view, so a scroll handler that
+   simply hid the tooltip would kill the keyboard path outright. Follow
+   the anchor instead, and only drop the tooltip once it leaves. */
+function tipReflow(){
+  if (!TIP_ANCHOR) return;
+  if (!TIP_ANCHOR.isConnected) { tipHide(); return; }
+  const r = TIP_ANCHOR.getBoundingClientRect();
+  if (r.bottom < 0 || r.top > window.innerHeight || r.right < 0 || r.left > window.innerWidth) { tipHide(); return; }
+  tipPlace(TIP_ANCHOR);
+}
+function wireTips(){
+  document.addEventListener("mouseover", ev => {
+    const b = ev.target.closest && ev.target.closest(".bdg");
+    if (b) tipShow(b);
+  });
+  document.addEventListener("mouseout", ev => {
+    const b = ev.target.closest && ev.target.closest(".bdg");
+    if (b && !(ev.relatedTarget && b.contains(ev.relatedTarget))) tipHide();
+  });
+  document.addEventListener("focusin", ev => {
+    const b = ev.target.closest && ev.target.closest(".bdg");
+    if (b) tipShow(b); else tipHide();
+  });
+  document.addEventListener("focusout", ev => {
+    /* focusout fires before the matching focusin; only drop the tooltip
+       if focus is actually leaving the badge it belongs to */
+    if (TIP_ANCHOR && ev.target === TIP_ANCHOR) tipHide();
+  });
+  document.addEventListener("keydown", ev => { if (ev.key === "Escape") tipHide(); });
+  window.addEventListener("scroll", tipReflow, true);
+  window.addEventListener("resize", tipReflow);
+}
+
 function setLang(lang, persist){
   if (lang !== "en" && lang !== "zh") lang = "en";
   LANG = lang;
   if (persist) langWrite(lang);
   applyStatics();
+  tipHide();
   if (FAILED) { fail(FAILED.kind, FAILED.vars); return; }
   if (!S.ready) return;
   /* every JS-rendered surface re-renders from the same state */
   renderPipelineOptions();
-  renderTop();
+  renderHome();
   renderModels();
   renderProviders();
   renderGpu();
@@ -1374,6 +1742,13 @@ function wire(){
     syncDir();
     S.mPage = 1; applyModels();
   });
+  el("f-unc").addEventListener("click", () => {
+    S.mUnc = !S.mUnc;
+    syncUnc();
+    S.mPage = 1; applyModels();
+    syncHash();
+  });
+  wireTips();
 
 
   const pq = el("pq");
@@ -1389,6 +1764,7 @@ function wire(){
   if (sSel.value) S.mSort = sSel.value;
 
   syncDir();
+  syncUnc();
   applyModels();
   applyProviders();
   el("foot-sig").textContent = t("foot.sig", { n: num(S.all.length) });
