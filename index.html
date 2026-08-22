@@ -33,8 +33,10 @@
   --accent-line:rgba(92,230,165,.32);
   --warn:#E6C15C;
 
-  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono","Roboto Mono",monospace;
-  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans","Noto Sans TC",sans-serif;
+  /* CJK faces are appended to both stacks so Traditional Chinese chrome
+     falls back consistently inside mono contexts (eyebrows, th, labels) */
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono","Roboto Mono","Noto Sans TC","PingFang TC","Microsoft JhengHei",monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
 
   --u:8px;
   --max:1200px;
@@ -93,7 +95,8 @@ button,select,input{font:inherit;color:inherit}
 }
 @keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
 
-nav.tabs{display:flex;gap:2px;margin-left:auto;flex-wrap:wrap}
+.mast-right{margin-left:auto;display:flex;align-items:center;gap:12px;min-width:0}
+nav.tabs{display:flex;gap:2px;flex-wrap:wrap}
 .tab{
   font-family:var(--mono);font-size:12.5px;letter-spacing:.04em;
   color:var(--muted);text-decoration:none;
@@ -104,6 +107,22 @@ nav.tabs{display:flex;gap:2px;margin-left:auto;flex-wrap:wrap}
 .tab[aria-current="page"]{
   color:var(--accent);background:var(--accent-soft);border-color:var(--accent-line);
 }
+
+/* language switch — two-state mono toggle, same register as the tabs */
+.langsw{
+  display:flex;flex:0 0 auto;
+  border:1px solid var(--line-hi);border-radius:var(--r);overflow:hidden;
+}
+.langsw button{
+  font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;
+  background:transparent;border:0;color:var(--muted);
+  padding:6px 10px;cursor:pointer;white-space:nowrap;
+  transition:color .12s ease,background .12s ease;
+}
+.langsw button + button{border-left:1px solid var(--line-hi)}
+.langsw button:hover{color:var(--text);background:#12151A}
+.langsw button[aria-pressed="true"]{color:var(--accent);background:var(--accent-soft)}
+.langsw button:focus-visible{outline-offset:-2px}
 
 /* ------------------------------------------------------------
    shell
@@ -283,9 +302,31 @@ footer strong{color:var(--text);font-weight:600}
 .skip{position:absolute;left:-9999px;top:0}
 .skip:focus{left:8px;top:8px;z-index:99;background:var(--panel);border:1px solid var(--accent);padding:8px 12px;font-family:var(--mono);font-size:12px;border-radius:var(--r)}
 
+/* ------------------------------------------------------------
+   zh-Hant overrides
+   CJK has no word spaces: the wide uppercase tracking that makes
+   Latin eyebrows read as terminal labels makes Han glyphs read as
+   scattered, and ch-based measures (sized on "0") come out roughly
+   half as many characters per line. Both are corrected here only.
+   ------------------------------------------------------------ */
+html[lang="zh-Hant"] .eyebrow,
+html[lang="zh-Hant"] .field label,
+html[lang="zh-Hant"] .ledger dt,
+html[lang="zh-Hant"] .metric dt,
+html[lang="zh-Hant"] .formula h3,
+html[lang="zh-Hant"] .bpp dt,
+html[lang="zh-Hant"] footer .sig,
+html[lang="zh-Hant"] .langsw button{letter-spacing:.08em}
+html[lang="zh-Hant"] thead th{letter-spacing:.05em}
+html[lang="zh-Hant"] .vh p{max-width:40em}
+html[lang="zh-Hant"] .state p{max-width:34em}
+html[lang="zh-Hant"] .gpu-head .policy{max-width:34em}
+html[lang="zh-Hant"] footer p{max-width:48em}
+html[lang="zh-Hant"] .tab{letter-spacing:.02em}
+
 @media (max-width:720px){
   .mast-in{height:auto;padding:10px calc(var(--u)*2);flex-direction:column;align-items:flex-start;gap:8px}
-  nav.tabs{margin-left:0;width:100%}
+  .mast-right{margin-left:0;width:100%;align-items:flex-start;justify-content:space-between}
   main{padding:calc(var(--u)*4) calc(var(--u)*2) calc(var(--u)*7)}
   .gpu-head .policy{margin-left:0;text-align:left}
   .ledger div{border-right:none;border-bottom:1px solid var(--line)}
@@ -296,20 +337,26 @@ footer strong{color:var(--text);font-weight:600}
 </style>
 </head>
 <body>
-<a class="skip" href="#main">Skip to content</a>
+<a class="skip" href="#main" data-i18n="skip">Skip to content</a>
 
 <header class="mast">
   <div class="mast-in">
-    <a class="brand" href="#/top" aria-label="AnonModel — home">
+    <a class="brand" href="#/top" data-i18n-attr="aria-label:brand.aria" aria-label="AnonModel — home">
       <span class="mark" id="wordmark" data-word="ANON<b>MODEL</b>">ANON<b>MODEL</b></span>
       <span class="caret" aria-hidden="true"></span>
     </a>
-    <nav class="tabs" aria-label="Views">
-      <a class="tab" href="#/top"       data-view="top">~/top-10</a>
-      <a class="tab" href="#/models"    data-view="models">~/models</a>
-      <a class="tab" href="#/providers" data-view="providers">~/providers</a>
-      <a class="tab" href="#/gpu"       data-view="gpu">~/gpu-fit</a>
-    </nav>
+    <div class="mast-right">
+      <nav class="tabs" data-i18n-attr="aria-label:nav.aria" aria-label="Views">
+        <a class="tab" href="#/top"       data-view="top"       data-i18n="tab.top">~/top-10</a>
+        <a class="tab" href="#/models"    data-view="models"    data-i18n="tab.models">~/models</a>
+        <a class="tab" href="#/providers" data-view="providers" data-i18n="tab.providers">~/providers</a>
+        <a class="tab" href="#/gpu"       data-view="gpu"       data-i18n="tab.gpu">~/gpu-fit</a>
+      </nav>
+      <div class="langsw" role="group" data-i18n-attr="aria-label:lang.aria" aria-label="Interface language">
+        <button type="button" id="lang-en" data-lang="en" aria-pressed="true" lang="en">EN</button>
+        <button type="button" id="lang-zh" data-lang="zh" aria-pressed="false" lang="zh-Hant">中文</button>
+      </div>
+    </div>
   </div>
 </header>
 
@@ -317,16 +364,16 @@ footer strong{color:var(--text);font-weight:600}
   <!-- boot / error / empty -->
   <section id="boot" class="state" role="status" aria-live="polite">
     <div class="glyph" aria-hidden="true">[ ··· ]</div>
-    <h2>Decrypting snapshot</h2>
-    <p>Loading <code>data/models.json</code> …</p>
+    <h2 data-i18n="boot.title">Decrypting snapshot</h2>
+    <p data-i18n-html="boot.body">Loading <code>data/models.json</code> …</p>
   </section>
 
   <!-- 1. TOP 10 -->
   <section class="view" id="view-top" hidden aria-labelledby="top-h">
     <div class="vh">
-      <p class="eyebrow"><span class="dot">▪</span> View 01 — trending</p>
-      <h1 id="top-h">Top 10 text-generation models</h1>
-      <p>Ranked by the Hugging Face <span class="tag">trendingScore</span> at snapshot time, restricted to <span class="tag">pipeline_tag = text-generation</span>. Ties break on 30-day downloads.</p>
+      <p class="eyebrow"><span class="dot">▪</span> <span data-i18n="top.eyebrow">View 01 — trending</span></p>
+      <h1 id="top-h" data-i18n="top.h1">Top 10 text-generation models</h1>
+      <p data-i18n-html="top.intro">Ranked by the Hugging Face <span class="tag">trendingScore</span> at snapshot time, restricted to <span class="tag">pipeline_tag = text-generation</span>. Ties break on 30-day downloads.</p>
     </div>
     <dl class="ledger" id="top-ledger"></dl>
     <div class="grid10" id="top-grid"></div>
@@ -335,41 +382,41 @@ footer strong{color:var(--text);font-weight:600}
   <!-- 2. MODEL LIST -->
   <section class="view" id="view-models" hidden aria-labelledby="models-h">
     <div class="vh">
-      <p class="eyebrow"><span class="dot">▪</span> View 02 — index</p>
-      <h1 id="models-h">Model index</h1>
-      <p>The full snapshot. Search matches model id, author and tags; results are paginated at 50 rows.</p>
+      <p class="eyebrow"><span class="dot">▪</span> <span data-i18n="models.eyebrow">View 02 — index</span></p>
+      <h1 id="models-h" data-i18n="models.h1">Model index</h1>
+      <p data-i18n-html="models.intro">The full snapshot. Search matches model id, author and tags; results are paginated at 50 rows.</p>
     </div>
     <div class="controls">
       <div class="field grow">
-        <label for="q">Search</label>
-        <input type="search" id="q" placeholder="qwen · meta-llama · gguf · apache-2.0" autocomplete="off" spellcheck="false">
+        <label for="q" data-i18n="models.search">Search</label>
+        <input type="search" id="q" data-i18n-attr="placeholder:models.searchPh" placeholder="qwen · meta-llama · gguf · apache-2.0" autocomplete="off" spellcheck="false">
       </div>
       <div class="field">
-        <label for="f-pipe">Pipeline</label>
+        <label for="f-pipe" data-i18n="models.pipeline">Pipeline</label>
         <select id="f-pipe"></select>
       </div>
       <div class="field">
-        <label for="f-sort">Sort by</label>
+        <label for="f-sort" data-i18n="models.sortBy">Sort by</label>
         <select id="f-sort">
-          <option value="downloads">downloads (30d)</option>
-          <option value="downloadsAllTime">downloads (all time)</option>
-          <option value="likes">likes</option>
-          <option value="trendingScore">trendingScore</option>
+          <option value="downloads" data-i18n="sort.downloads">downloads (30d)</option>
+          <option value="downloadsAllTime" data-i18n="sort.downloadsAllTime">downloads (all time)</option>
+          <option value="likes" data-i18n="sort.likes">likes</option>
+          <option value="trendingScore" data-i18n="sort.trendingScore">trendingScore</option>
         </select>
       </div>
       <div class="field">
-        <label for="f-dir">Order</label>
-        <button class="btn" id="f-dir" aria-label="Toggle sort order">↓ desc</button>
+        <label for="f-dir" data-i18n="models.order">Order</label>
+        <button class="btn" id="f-dir" aria-label="Sort order: descending">↓ desc</button>
       </div>
     </div>
     <p class="resultline" id="m-count"></p>
     <div class="tw">
       <table>
-        <caption class="sr">Model index</caption>
+        <caption class="sr" data-i18n="models.caption">Model index</caption>
         <thead><tr>
-          <th class="n">#</th><th>Model</th><th>Author</th><th>Pipeline</th>
-          <th class="n">DL 30d</th><th class="n">DL all-time</th><th class="n">Likes</th><th class="n">Trend</th>
-          <th>License</th><th>Updated</th>
+          <th class="n" data-i18n="th.num">#</th><th data-i18n="th.model">Model</th><th data-i18n="th.author">Author</th><th data-i18n="th.pipeline">Pipeline</th>
+          <th class="n" data-i18n="th.dl30">DL 30d</th><th class="n" data-i18n="th.dlAll">DL all-time</th><th class="n" data-i18n="th.likes">Likes</th><th class="n" data-i18n="th.trend">Trend</th>
+          <th data-i18n="th.license">License</th><th data-i18n="th.updated">Updated</th>
         </tr></thead>
         <tbody id="m-body"></tbody>
       </table>
@@ -380,24 +427,24 @@ footer strong{color:var(--text);font-weight:600}
   <!-- 3. PROVIDERS -->
   <section class="view" id="view-providers" hidden aria-labelledby="prov-h">
     <div class="vh">
-      <p class="eyebrow"><span class="dot">▪</span> View 03 — providers</p>
-      <h1 id="prov-h">Provider leaderboard</h1>
-      <p>Records grouped by <span class="tag">author</span>, ranked by total 30-day downloads. All-time totals are shown alongside, since the two orderings differ.</p>
+      <p class="eyebrow"><span class="dot">▪</span> <span data-i18n="prov.eyebrow">View 03 — providers</span></p>
+      <h1 id="prov-h" data-i18n="prov.h1">Provider leaderboard</h1>
+      <p data-i18n-html="prov.intro">Records grouped by <span class="tag">author</span>, ranked by total 30-day downloads. All-time totals are shown alongside, since the two orderings differ.</p>
     </div>
     <div class="controls">
       <div class="field grow">
-        <label for="pq">Filter providers</label>
-        <input type="search" id="pq" placeholder="Qwen, meta-llama, nvidia…" autocomplete="off" spellcheck="false">
+        <label for="pq" data-i18n="prov.filter">Filter providers</label>
+        <input type="search" id="pq" data-i18n-attr="placeholder:prov.filterPh" placeholder="Qwen, meta-llama, nvidia…" autocomplete="off" spellcheck="false">
       </div>
     </div>
     <p class="resultline" id="p-count"></p>
     <div class="tw">
       <table>
-        <caption class="sr">Provider leaderboard</caption>
+        <caption class="sr" data-i18n="prov.caption">Provider leaderboard</caption>
         <thead><tr>
-          <th class="n">#</th><th>Provider</th><th class="n">Models</th>
-          <th class="n">DL 30d</th><th class="n">DL all-time</th><th class="n">Likes</th>
-          <th>Top pipeline</th>
+          <th class="n" data-i18n="th.num">#</th><th data-i18n="th.provider">Provider</th><th class="n" data-i18n="th.models">Models</th>
+          <th class="n" data-i18n="th.dl30">DL 30d</th><th class="n" data-i18n="th.dlAll">DL all-time</th><th class="n" data-i18n="th.likes">Likes</th>
+          <th data-i18n="th.topPipe">Top pipeline</th>
         </tr></thead>
         <tbody id="p-body"></tbody>
       </table>
@@ -408,22 +455,22 @@ footer strong{color:var(--text);font-weight:600}
   <!-- 4. GPU FIT -->
   <section class="view" id="view-gpu" hidden aria-labelledby="gpu-h">
     <div class="vh">
-      <p class="eyebrow"><span class="dot">▪</span> View 04 — hardware</p>
-      <h1 id="gpu-h">GPU compatibility</h1>
-      <p>Weight-memory estimates for the text-generation models whose parameter count is published. Estimates cover model weights plus a flat runtime overhead — they are not a benchmark.</p>
+      <p class="eyebrow"><span class="dot">▪</span> <span data-i18n="gpu.eyebrow">View 04 — hardware</span></p>
+      <h1 id="gpu-h" data-i18n="gpu.h1">GPU compatibility</h1>
+      <p data-i18n-html="gpu.intro">Weight-memory estimates for the text-generation models whose parameter count is published. Estimates cover model weights plus a flat runtime overhead — they are not a benchmark.</p>
     </div>
 
     <div class="formula">
-      <h3>Estimation formula</h3>
-      <div class="eq">VRAM <span class="dim">(GB)</span> &nbsp;≈&nbsp; params <span class="dim">(billions)</span> &nbsp;×&nbsp; <em>bytes_per_param</em> &nbsp;+&nbsp; <em>1.5</em> <span class="dim">GB overhead</span></div>
+      <h3 data-i18n="gpu.formulaH">Estimation formula</h3>
+      <div class="eq" data-i18n-html="gpu.eq">VRAM <span class="dim">(GB)</span> &nbsp;≈&nbsp; params <span class="dim">(billions)</span> &nbsp;×&nbsp; <em>bytes_per_param</em> &nbsp;+&nbsp; <em>1.5</em> <span class="dim">GB overhead</span></div>
       <dl class="bpp">
-        <div><dt>FP16</dt><dd>2.00 <small>B/param</small></dd></div>
-        <div><dt>Q8</dt><dd>1.07 <small>B/param</small></dd></div>
-        <div><dt>Q6</dt><dd>0.82 <small>B/param</small></dd></div>
-        <div><dt>Q5</dt><dd>0.72 <small>B/param</small></dd></div>
-        <div><dt>Q4</dt><dd>0.60 <small>B/param</small></dd></div>
+        <div><dt>FP16</dt><dd>2.00 <small data-i18n="gpu.bppUnit">B/param</small></dd></div>
+        <div><dt>Q8</dt><dd>1.07 <small data-i18n="gpu.bppUnit">B/param</small></dd></div>
+        <div><dt>Q6</dt><dd>0.82 <small data-i18n="gpu.bppUnit">B/param</small></dd></div>
+        <div><dt>Q5</dt><dd>0.72 <small data-i18n="gpu.bppUnit">B/param</small></dd></div>
+        <div><dt>Q4</dt><dd>0.60 <small data-i18n="gpu.bppUnit">B/param</small></dd></div>
       </dl>
-      <p class="caveat">
+      <p class="caveat" data-i18n-html="gpu.caveat">
         FP16 = 2.00, Q8 ≈ 1.07 and Q4 ≈ 0.60 bytes per parameter are the reference values; Q6 ≈ 0.82 and Q5 ≈ 0.72 are interpolated between them for the mid-range quantisations. The flat <code>1.5 GB</code> covers CUDA context, activations and a short KV cache — long-context work needs more, and MoE checkpoints load all experts into VRAM even though only a few are active per token.
       </p>
       <p class="caveat" id="gpu-scope"></p>
@@ -435,7 +482,7 @@ footer strong{color:var(--text);font-weight:600}
 
 <footer>
   <div class="foot-in">
-    <p><strong>Unofficial mirror.</strong> Data sourced from the Hugging Face public API and served as a static snapshot. AnonModel is not affiliated with, endorsed by, or connected to Hugging Face. Model metadata, licences and parameter counts are reproduced as published by their authors — verify on the source repository before use.</p>
+    <p data-i18n-html="foot.disclaimer"><strong>Unofficial mirror.</strong> Data sourced from the Hugging Face public API and served as a static snapshot. AnonModel is not affiliated with, endorsed by, or connected to Hugging Face. Model metadata, licences and parameter counts are reproduced as published by their authors — verify on the source repository before use.</p>
     <p class="sig" id="foot-sig">ANONMODEL · STATIC SNAPSHOT</p>
   </div>
 </footer>
@@ -445,6 +492,328 @@ footer strong{color:var(--text);font-weight:600}
 /* ============================================================
    AnonModel — single-file client. No framework, no CDN.
    ============================================================ */
+
+/* ============================================================
+   i18n — UI chrome only.
+   Data values (model ids, authors, licence identifiers, tag
+   strings, raw pipeline_tag values, numbers) are NEVER translated:
+   they are reproduced exactly as the Hugging Face API published
+   them. The one exception is additive — the pipeline filter
+   dropdown appends a Chinese gloss after the raw tag, e.g.
+   "text-generation（文字生成）", and the option value stays raw.
+   ============================================================ */
+const I18N = {
+en: {
+  /* chrome / navigation */
+  "skip":"Skip to content",
+  "brand.aria":"AnonModel — home",
+  "nav.aria":"Views",
+  "lang.aria":"Interface language",
+  "lang.en.aria":"Switch interface to English",
+  "lang.zh.aria":"Switch interface to Traditional Chinese",
+  "tab.top":"~/top-10",
+  "tab.models":"~/models",
+  "tab.providers":"~/providers",
+  "tab.gpu":"~/gpu-fit",
+  "meta.desc":"AnonModel is an unofficial, open-source data station for public AI models: trending text-generation rankings, a searchable index of 5,000+ models, provider leaderboards, and RTX 5090 / 4090 / 3090 VRAM compatibility tables. Data sourced from the Hugging Face public API.",
+  "title.top":"Top 10",
+  "title.models":"Model index",
+  "title.providers":"Providers",
+  "title.gpu":"GPU compatibility",
+
+  /* boot + failure states */
+  "boot.title":"Decrypting snapshot",
+  "boot.body":"Loading <code>data/models.json</code> …",
+  "err.unavailable.title":"Snapshot unavailable",
+  "err.unavailable.body":"Could not load <code>data/models.json</code> — {err}. The page must be served over HTTP (for example <code>python3 -m http.server</code>) from the project root; opening the file directly from disk will not work.",
+  "err.malformed.title":"Snapshot malformed",
+  "err.malformed.body":"Expected <code>data/models.json</code> to contain a JSON array of model records.",
+  "err.empty.title":"Snapshot empty",
+  "err.empty.body":"The file <code>data/models.json</code> loaded successfully but contains no records. Re-run <code>scripts/fetch_snapshot.py</code> to repopulate it.",
+  "err.nosizing.title":"No sizing data",
+  "err.nosizing.body":"No text-generation record in this snapshot publishes a parameter count, so VRAM estimates cannot be computed.",
+
+  /* view 01 */
+  "top.eyebrow":"View 01 — trending",
+  "top.h1":"Top 10 text-generation models",
+  "top.intro":'Ranked by the Hugging Face <span class="tag">trendingScore</span> at snapshot time, restricted to <span class="tag">pipeline_tag = text-generation</span>. Ties break on 30-day downloads.',
+  "led.records":"Records",
+  "led.providers":"Providers",
+  "led.textgen":"Text-generation",
+  "led.dl30":"Downloads 30d",
+  "led.snapshot":"Snapshot",
+  "tile.dl30":"DL 30d",
+  "tile.allTime":"All time",
+  "tile.likes":"Likes",
+  "tile.tsTitle":"trendingScore",
+  "tile.licTitle":"License",
+  "empty.top":"No text-generation models in this snapshot.",
+
+  /* view 02 */
+  "models.eyebrow":"View 02 — index",
+  "models.h1":"Model index",
+  "models.intro":"The full snapshot. Search matches model id, author and tags; results are paginated at 50 rows.",
+  "models.search":"Search",
+  "models.searchPh":"qwen · meta-llama · gguf · apache-2.0",
+  "models.pipeline":"Pipeline",
+  "models.sortBy":"Sort by",
+  "models.order":"Order",
+  "models.caption":"Model index",
+  "sort.downloads":"downloads (30d)",
+  "sort.downloadsAllTime":"downloads (all time)",
+  "sort.likes":"likes",
+  "sort.trendingScore":"trendingScore",
+  "dir.desc":"↓ desc",
+  "dir.asc":"↑ asc",
+  "dir.desc.aria":"Sort order: descending",
+  "dir.asc.aria":"Sort order: ascending",
+  "pipe.all":"all ({n})",
+  "pipe.none":"(none)",
+  "count.models":"<b>{n}</b> of {total} records &nbsp;·&nbsp; showing {from}–{to}",
+  "count.modelsZero":"<b>0</b> of {total} records",
+  "empty.models":"No model matches these filters. Clear the search box or reset the pipeline filter.",
+
+  /* view 03 */
+  "prov.eyebrow":"View 03 — providers",
+  "prov.h1":"Provider leaderboard",
+  "prov.intro":'Records grouped by <span class="tag">author</span>, ranked by total 30-day downloads. All-time totals are shown alongside, since the two orderings differ.',
+  "prov.filter":"Filter providers",
+  "prov.filterPh":"Qwen, meta-llama, nvidia…",
+  "prov.caption":"Provider leaderboard",
+  "count.providers":"<b>{n}</b> providers",
+  "count.providersQ":"<b>{n}</b> providers matching “{q}”",
+  "count.showing":" &nbsp;·&nbsp; showing {from}–{to}",
+  "empty.providers":"No provider matches that filter.",
+
+  /* table headers */
+  "th.num":"#",
+  "th.model":"Model",
+  "th.author":"Author",
+  "th.pipeline":"Pipeline",
+  "th.dl30":"DL 30d",
+  "th.dlAll":"DL all-time",
+  "th.likes":"Likes",
+  "th.trend":"Trend",
+  "th.license":"License",
+  "th.updated":"Updated",
+  "th.provider":"Provider",
+  "th.models":"Models",
+  "th.topPipe":"Top pipeline",
+  "th.params":"Params",
+  "th.budgeted":"Budgeted",
+  "th.estVram":"Est. VRAM",
+
+  /* pager */
+  "pager.pos":"page {page} / {pages}",
+  "pager.first":"« first",
+  "pager.prev":"prev",
+  "pager.next":"next",
+  "pager.last":"last »",
+
+  /* view 04 */
+  "gpu.eyebrow":"View 04 — hardware",
+  "gpu.h1":"GPU compatibility",
+  "gpu.intro":"Weight-memory estimates for the text-generation models whose parameter count is published. Estimates cover model weights plus a flat runtime overhead — they are not a benchmark.",
+  "gpu.formulaH":"Estimation formula",
+  "gpu.eq":'VRAM <span class="dim">(GB)</span> &nbsp;≈&nbsp; params <span class="dim">(billions)</span> &nbsp;×&nbsp; <em>bytes_per_param</em> &nbsp;+&nbsp; <em>1.5</em> <span class="dim">GB overhead</span>',
+  "gpu.bppUnit":"B/param",
+  "gpu.caveat":"FP16 = 2.00, Q8 ≈ 1.07 and Q4 ≈ 0.60 bytes per parameter are the reference values; Q6 ≈ 0.82 and Q5 ≈ 0.72 are interpolated between them for the mid-range quantisations. The flat <code>1.5 GB</code> covers CUDA context, activations and a short KV cache — long-context work needs more, and MoE checkpoints load all experts into VRAM even though only a few are active per token.",
+  "gpu.scope":"Scope: <code>{pool}</code> of {withParams} text-generation records that publish a parameter count (out of {all} records in the snapshot). Entries below 0.1 B parameters and <code>tiny-random</code> test stubs are excluded — a handful of repositories publish placeholder parameter counts that would otherwise rank as “fits everywhere”.",
+  "gpu.badge":"{vram} GB VRAM · budget {ladder}",
+  "gpu.caption":"{card} top 10 fitting models",
+  "gpu.util":"{pct}% of {vram} GB",
+  "gpu.empty":"No model in the snapshot fits this card at its budgeted quantisation.",
+  "gpu.policy.3090":"Ampere, 24 GB, no FP8 path — the conservative pick. Weights are budgeted at Q4 only and kept near 45 % of VRAM, leaving room for a long KV cache.",
+  "gpu.policy.4090":"Ada, 24 GB. Same capacity as the 3090 but budgeted at Q5/Q6, so the list favours models that stay high-quality while filling ~78 % of VRAM.",
+  "gpu.policy.5090":"Blackwell, 32 GB. Takes the highest quantisation that fits — Q8 up to ~27 B, Q6 for the 30 B class that no 24 GB card can hold at this quality.",
+
+  /* synthesised fallbacks — NOT API values, so they are UI chrome */
+  "val.unknownAuthor":"(unknown)",
+  "val.unspecifiedLic":"unspecified",
+  "val.unclassified":"(unclassified)",
+
+  /* footer */
+  "foot.disclaimer":"<strong>Unofficial mirror.</strong> Data sourced from the Hugging Face public API and served as a static snapshot. AnonModel is not affiliated with, endorsed by, or connected to Hugging Face. Model metadata, licences and parameter counts are reproduced as published by their authors — verify on the source repository before use.",
+  "foot.sig":"ANONMODEL · {n} RECORDS · STATIC SNAPSHOT"
+},
+zh: {
+  "skip":"跳至主要內容",
+  "brand.aria":"AnonModel — 首頁",
+  "nav.aria":"檢視",
+  "lang.aria":"介面語言",
+  "lang.en.aria":"將介面切換為英文",
+  "lang.zh.aria":"將介面切換為繁體中文",
+  "tab.top":"~/熱門十大",
+  "tab.models":"~/模型索引",
+  "tab.providers":"~/供應商",
+  "tab.gpu":"~/顯卡適配",
+  "meta.desc":"AnonModel 是非官方的開源 AI 模型資料站：文字生成模型熱門排行、5,000 筆以上模型的可搜尋索引、供應商排行榜，以及 RTX 5090 / 4090 / 3090 的 VRAM 相容性對照表。資料取自 Hugging Face 公開 API。",
+  "title.top":"熱門十大",
+  "title.models":"模型索引",
+  "title.providers":"供應商",
+  "title.gpu":"顯示卡相容性",
+
+  "boot.title":"正在解碼快照",
+  "boot.body":"載入 <code>data/models.json</code> …",
+  "err.unavailable.title":"無法載入快照",
+  "err.unavailable.body":"讀不到 <code>data/models.json</code> — {err}。本頁必須透過 HTTP 從專案根目錄提供服務（例如執行 <code>python3 -m http.server</code>）；直接從磁碟開啟檔案不會運作。",
+  "err.malformed.title":"快照格式錯誤",
+  "err.malformed.body":"<code>data/models.json</code> 應該是一個由模型記錄組成的 JSON 陣列。",
+  "err.empty.title":"快照是空的",
+  "err.empty.body":"<code>data/models.json</code> 已成功載入，但裡面沒有任何記錄。請重新執行 <code>scripts/fetch_snapshot.py</code> 重新取得資料。",
+  "err.nosizing.title":"沒有可用的尺寸資料",
+  "err.nosizing.body":"這份快照中沒有任何文字生成模型公開參數量，因此無法估算 VRAM 需求。",
+
+  "top.eyebrow":"檢視 01 — 熱門趨勢",
+  "top.h1":"文字生成模型熱門十大",
+  "top.intro":'依快照當下的 Hugging Face <span class="tag">trendingScore</span> 排名，僅收錄 <span class="tag">pipeline_tag = text-generation</span> 的模型。分數相同時以 30 天下載量決勝。',
+  "led.records":"收錄筆數",
+  "led.providers":"供應商",
+  "led.textgen":"文字生成",
+  "led.dl30":"30 天下載",
+  "led.snapshot":"快照日期",
+  "tile.dl30":"30 天下載",
+  "tile.allTime":"歷來累計",
+  "tile.likes":"按讚數",
+  "tile.tsTitle":"熱門分數 trendingScore",
+  "tile.licTitle":"授權條款",
+  "empty.top":"這份快照中沒有文字生成模型。",
+
+  "models.eyebrow":"檢視 02 — 索引",
+  "models.h1":"模型索引",
+  "models.intro":"完整快照。搜尋會比對模型 id、發布者與標籤；結果每頁 50 筆。",
+  "models.search":"搜尋",
+  "models.searchPh":"例如 qwen · meta-llama · gguf · apache-2.0",
+  "models.pipeline":"任務類型",
+  "models.sortBy":"排序依據",
+  "models.order":"排序方向",
+  "models.caption":"模型索引",
+  "sort.downloads":"下載量（30 天）",
+  "sort.downloadsAllTime":"下載量（歷來累計）",
+  "sort.likes":"按讚數",
+  "sort.trendingScore":"熱門分數",
+  "dir.desc":"↓ 遞減",
+  "dir.asc":"↑ 遞增",
+  "dir.desc.aria":"排序方向：由大到小",
+  "dir.asc.aria":"排序方向：由小到大",
+  "pipe.all":"全部（{n}）",
+  "pipe.none":"（未標註）",
+  "count.models":"<b>{n}</b> / {total} 筆記錄 &nbsp;·&nbsp; 顯示第 {from}–{to} 筆",
+  "count.modelsZero":"<b>0</b> / {total} 筆記錄",
+  "empty.models":"沒有模型符合目前的篩選條件。請清空搜尋框，或把任務類型篩選器重設為「全部」。",
+
+  "prov.eyebrow":"檢視 03 — 供應商",
+  "prov.h1":"供應商排行榜",
+  "prov.intro":'以 <span class="tag">author</span> 分組彙整，依 30 天下載總量排名。兩種排序的名次並不相同，因此同時列出歷來累計下載量。',
+  "prov.filter":"篩選供應商",
+  "prov.filterPh":"例如 Qwen、meta-llama、nvidia…",
+  "prov.caption":"供應商排行榜",
+  "count.providers":"<b>{n}</b> 個供應商",
+  "count.providersQ":"<b>{n}</b> 個供應商符合「{q}」",
+  "count.showing":" &nbsp;·&nbsp; 顯示第 {from}–{to} 筆",
+  "empty.providers":"沒有供應商符合這個篩選條件。",
+
+  "th.num":"#",
+  "th.model":"模型",
+  "th.author":"發布者",
+  "th.pipeline":"任務類型",
+  "th.dl30":"30 天下載",
+  "th.dlAll":"歷來下載",
+  "th.likes":"按讚",
+  "th.trend":"熱門",
+  "th.license":"授權",
+  "th.updated":"更新",
+  "th.provider":"供應商",
+  "th.models":"模型數",
+  "th.topPipe":"主要任務",
+  "th.params":"參數量",
+  "th.budgeted":"預算量化",
+  "th.estVram":"估算 VRAM",
+
+  "pager.pos":"第 {page} / {pages} 頁",
+  "pager.first":"« 首頁",
+  "pager.prev":"上一頁",
+  "pager.next":"下一頁",
+  "pager.last":"末頁 »",
+
+  "gpu.eyebrow":"檢視 04 — 硬體",
+  "gpu.h1":"顯示卡相容性",
+  "gpu.intro":"針對有公開參數量的文字生成模型，估算載入權重所需的記憶體。估算值只涵蓋模型權重加上一筆固定的執行期開銷，不是效能實測。",
+  "gpu.formulaH":"估算公式",
+  "gpu.eq":'VRAM <span class="dim">（GB）</span> &nbsp;≈&nbsp; 參數量 <span class="dim">（十億）</span> &nbsp;×&nbsp; <em>bytes_per_param</em> &nbsp;+&nbsp; <em>1.5</em> <span class="dim">GB 額外開銷</span>',
+  "gpu.bppUnit":"位元組/參數",
+  "gpu.caveat":"FP16 = 2.00、Q8 ≈ 1.07、Q4 ≈ 0.60 位元組每參數是參考基準值；Q6 ≈ 0.82 與 Q5 ≈ 0.72 則是在兩者之間內插得到的中階量化值。固定的 <code>1.5 GB</code> 用來涵蓋 CUDA context、activations 與一小段 KV cache — 長上下文的工作需要更多，而 MoE checkpoint 即使每個 token 只啟用少數專家，仍會把全部專家載入 VRAM。",
+  "gpu.scope":"取樣範圍：快照共 {all} 筆記錄，其中 {withParams} 筆文字生成模型有公開參數量，實際納入 <code>{pool}</code> 筆。參數量低於 0.1 B 的項目與 <code>tiny-random</code> 測試樣板已排除 — 少數儲存庫填的是佔位用的參數量，否則會被排成「什麼卡都塞得下」。",
+  "gpu.badge":"{vram} GB VRAM · 預算 {ladder}",
+  "gpu.caption":"{card} 可執行模型前十名",
+  "gpu.util":"佔 {vram} GB 的 {pct}%",
+  "gpu.empty":"這份快照中沒有模型能在本卡的預算量化下執行。",
+  "gpu.policy.3090":"Ampere 架構，24 GB，沒有 FP8 路徑 — 保守的選擇。權重一律以 Q4 編列預算，並控制在 VRAM 的 45 % 左右，留出空間給較長的 KV cache。",
+  "gpu.policy.4090":"Ada 架構，24 GB。容量與 3090 相同，但以 Q5／Q6 編列預算，因此榜單偏好那些能維持高品質、同時把 VRAM 用到約 78 % 的模型。",
+  "gpu.policy.5090":"Blackwell 架構，32 GB。採用塞得下的最高量化等級 — 約 27 B 以下走 Q8，30 B 級距則走 Q6，這個品質是任何 24 GB 顯示卡都裝不下的。",
+
+  "val.unknownAuthor":"（不明）",
+  "val.unspecifiedLic":"未指定",
+  "val.unclassified":"（未分類）",
+
+  "foot.disclaimer":"<strong>非官方鏡像站。</strong>資料取自 Hugging Face 公開 API，以靜態快照的形式提供。AnonModel 與 Hugging Face 並無任何從屬、背書或合作關係。模型 metadata、授權條款與參數量皆按原作者發布的內容原樣轉載 — 實際使用前請回到來源儲存庫查證。",
+  "foot.sig":"ANONMODEL · {n} 筆記錄 · 靜態快照"
+}
+};
+
+/* Additive gloss for the raw pipeline_tag values shown in the filter
+   dropdown. The raw tag is always kept; the gloss is appended in
+   parentheses. Never used to replace a value, and never applied to
+   table cells (those stay byte-identical to the API). */
+const PIPE_GLOSS_ZH = {
+  "text-generation":"文字生成","image-text-to-text":"圖文轉文字","token-classification":"詞元分類",
+  "automatic-speech-recognition":"自動語音辨識","sentence-similarity":"句子相似度","feature-extraction":"特徵擷取",
+  "text-classification":"文字分類","image-classification":"影像分類","fill-mask":"克漏字填空",
+  "text-to-image":"文字生成圖片","text-to-speech":"文字轉語音","text-to-video":"文字生成影片",
+  "zero-shot-image-classification":"零樣本影像分類","any-to-any":"任意模態互轉","image-feature-extraction":"影像特徵擷取",
+  "time-series-forecasting":"時間序列預測","translation":"翻譯","text-ranking":"文字排序",
+  "image-to-text":"影像轉文字","image-to-image":"影像轉影像","image-to-video":"影像生成影片",
+  "image-segmentation":"影像分割","audio-classification":"音訊分類","zero-shot-classification":"零樣本分類",
+  "object-detection":"物件偵測","depth-estimation":"深度估計","image-to-3d":"影像轉 3D",
+  "question-answering":"問答","mask-generation":"遮罩生成","audio-to-audio":"音訊轉音訊",
+  "audio-text-to-text":"音訊圖文轉文字","zero-shot-object-detection":"零樣本物件偵測",
+  "visual-document-retrieval":"視覺文件檢索","summarization":"摘要","robotics":"機器人",
+  "voice-activity-detection":"語音活動偵測","image-text-to-video":"圖文生成影片","keypoint-detection":"關鍵點偵測",
+  "video-classification":"影片分類","text-to-audio":"文字轉音訊","tabular-classification":"表格資料分類",
+  "video-to-video":"影片轉影片","tabular-regression":"表格資料迴歸","visual-question-answering":"視覺問答",
+  "video-text-to-text":"影片文字轉文字","reinforcement-learning":"強化學習","other":"其他",
+  "table-question-answering":"表格問答","document-question-answering":"文件問答",
+  "image-text-to-image":"圖文生成圖片","unconditional-image-generation":"無條件影像生成",
+  "text2text-generation":"文字轉文字生成","graph-ml":"圖機器學習","object-tracking":"物件追蹤"
+};
+
+const LANG_KEY = "anonmodel.lang";
+const HTML_LANG = { en:"en", zh:"zh-Hant" };
+let LANG = "en";
+
+/* every read/write guarded — some viewers block site data outright */
+function langRead(){
+  try {
+    const v = window.localStorage.getItem(LANG_KEY);
+    return (v === "en" || v === "zh") ? v : null;
+  } catch (e) { return null; }
+}
+function langWrite(v){
+  try { window.localStorage.setItem(LANG_KEY, v); } catch (e) { /* non-fatal */ }
+}
+
+/* t() falls back to English for any key missing from a locale, so a
+   raw key can never reach the DOM */
+function t(key, vars){
+  const table = I18N[LANG] || I18N.en;
+  let s = table[key];
+  if (s === undefined) s = I18N.en[key];
+  if (s === undefined) s = "";
+  if (vars) {
+    s = s.replace(/\{(\w+)\}/g, (m, k) => (vars[k] === undefined || vars[k] === null) ? m : String(vars[k]));
+  }
+  return s;
+}
 
 /* ---------- utilities ---------- */
 const $ = (s, r) => (r || document).querySelector(s);
@@ -492,6 +861,15 @@ function paramsB(p){
   return p / 1e9;
 }
 function rank(i){ return String(i+1).padStart(2,"0"); }
+
+/* Display-time localisation of the three SYNTHESISED fallbacks above.
+   These are strings this page invents when the API published nothing —
+   they are UI chrome, not data, so they follow the interface language.
+   The stored sentinels stay constant so the search haystack, the
+   provider grouping key and the sort order never shift with language. */
+function dAuthor(a){ return a === "(unknown)" ? t("val.unknownAuthor") : a; }
+function dLic(l){ return l === "unspecified" ? t("val.unspecifiedLic") : l; }
+function dTopPipe(p){ return p === "(unclassified)" ? t("val.unclassified") : p; }
 function debounce(fn, ms){
   let t; return function(){ const a = arguments; clearTimeout(t); t = setTimeout(() => fn.apply(null, a), ms); };
 }
@@ -508,14 +886,18 @@ const S = {
 const PER = 50;
 
 /* ---------- boot ---------- */
-function fail(title, detail){
+/* the failure is remembered so the language toggle can re-render it */
+let FAILED = null;
+
+function fail(kind, vars){
+  FAILED = { kind: kind, vars: vars || null };
   const b = el("boot");
   b.hidden = false;
   b.className = "state err";
   b.innerHTML =
     '<div class="glyph" aria-hidden="true">[ ✕ ]</div>' +
-    '<h2>' + esc(title) + '</h2>' +
-    '<p>' + detail + '</p>';
+    '<h2>' + esc(t("err." + kind + ".title")) + '</h2>' +
+    '<p>' + t("err." + kind + ".body", vars) + '</p>';
   document.querySelectorAll(".view").forEach(v => { v.hidden = true; });
 }
 
@@ -526,19 +908,11 @@ async function boot(){
     if (!res.ok) throw new Error("HTTP " + res.status + " " + res.statusText);
     raw = await res.json();
   } catch (e) {
-    fail("Snapshot unavailable",
-      'Could not load <code>data/models.json</code> — ' + esc(e && e.message ? e.message : "unknown error") +
-      '. The page must be served over HTTP (for example <code>python3 -m http.server</code>) from the project root; opening the file directly from disk will not work.');
+    fail("unavailable", { err: esc(e && e.message ? e.message : "unknown error") });
     return;
   }
-  if (!Array.isArray(raw)) {
-    fail("Snapshot malformed", 'Expected <code>data/models.json</code> to contain a JSON array of model records.');
-    return;
-  }
-  if (raw.length === 0) {
-    fail("Snapshot empty", 'The file <code>data/models.json</code> loaded successfully but contains no records. Re-run <code>scripts/fetch_snapshot.py</code> to repopulate it.');
-    return;
-  }
+  if (!Array.isArray(raw)) { fail("malformed"); return; }
+  if (raw.length === 0) { fail("empty"); return; }
 
   S.all = raw.map(m => {
     const rec = {
@@ -561,6 +935,7 @@ async function boot(){
   });
 
   el("boot").hidden = true;
+  FAILED = null;
   S.ready = true;
   buildPipelines();
   buildProviders();
@@ -579,12 +954,36 @@ function buildPipelines(){
   });
   const list = [...c.entries()].sort((a,b) => b[1] - a[1]);
   S.pipelines = list;
+  renderPipelineOptions();
+}
+
+/* Option VALUES are always the raw pipeline_tag key; only the visible
+   label is localised, and in zh the raw tag keeps its place with the
+   gloss appended after it. Rebuilding innerHTML drops the selection,
+   so it is restored from state afterwards — the controls and the
+   rendered table must never disagree. */
+function renderPipelineOptions(){
   const sel = el("f-pipe");
-  let h = '<option value="__all__">all (' + S.all.length + ')</option>';
-  list.forEach(([k,n]) => {
-    h += '<option value="' + esc(k) + '">' + (k === "__none__" ? "(none)" : esc(k)) + ' (' + n + ')</option>';
+  if (!sel) return;
+  let h = '<option value="__all__">' + esc(t("pipe.all", { n: S.all.length })) + '</option>';
+  S.pipelines.forEach(([k,n]) => {
+    let label;
+    if (k === "__none__") {
+      label = t("pipe.none");
+    } else {
+      const gloss = (LANG === "zh") ? PIPE_GLOSS_ZH[k] : null;
+      label = gloss ? (k + "（" + gloss + "）") : k;
+    }
+    h += '<option value="' + esc(k) + '">' + esc(label) + ' (' + n + ')</option>';
   });
   sel.innerHTML = h;
+  /* Only reassert on a re-render (language swap). On the very first
+     build we leave the element alone so the browser's own across-reload
+     form restoration still reaches wire(), which adopts it. */
+  if (S.ready) {
+    sel.value = S.mPipe;
+    if (!sel.value) { sel.value = "__all__"; S.mPipe = "__all__"; }
+  }
 }
 
 function buildProviders(){
@@ -619,35 +1018,35 @@ function renderTop(){
   const totalDl = S.all.reduce((a,m) => a + m.downloads, 0);
 
   el("top-ledger").innerHTML = [
-    ["Records", num(S.all.length)],
-    ["Providers", num(S.providers.length)],
-    ["Text-generation", num(tg.length)],
-    ["Downloads 30d", compact(totalDl)],
-    ["Snapshot", latest ? new Date(latest).toISOString().slice(0,10) : "—"]
+    [t("led.records"), num(S.all.length)],
+    [t("led.providers"), num(S.providers.length)],
+    [t("led.textgen"), num(tg.length)],
+    [t("led.dl30"), compact(totalDl)],
+    [t("led.snapshot"), latest ? new Date(latest).toISOString().slice(0,10) : "—"]
   ].map(([k,v]) => '<div><dt>' + esc(k) + '</dt><dd>' + esc(v) + '</dd></div>').join("");
 
   const g = el("top-grid");
-  if (!top.length) { g.innerHTML = '<div class="empty">No text-generation models in this snapshot.</div>'; return; }
+  if (!top.length) { g.innerHTML = '<div class="empty">' + esc(t("empty.top")) + '</div>'; return; }
 
   g.innerHTML = top.map((m,i) => {
     const l = lic(m);
     const unspec = l === "unspecified";
     return '' +
       '<article class="tile">' +
-        '<span class="trend" title="trendingScore">TS ' + esc(m.trendingScore) + '</span>' +
+        '<span class="trend" title="' + esc(t("tile.tsTitle")) + '">TS ' + esc(m.trendingScore) + '</span>' +
         '<div class="tile-top">' +
           '<span class="rank">' + rank(i) + '</span>' +
           '<div class="mid">' +
             '<div class="mname">' + esc(m.id) + '</div>' +
-            '<div class="mauth">' + esc(m.author) + '</div>' +
+            '<div class="mauth">' + esc(dAuthor(m.author)) + '</div>' +
           '</div>' +
         '</div>' +
         '<dl class="metrics">' +
-          '<div class="metric"><dt>DL 30d</dt><dd title="' + esc(num(m.downloads)) + '">' + esc(compact(m.downloads)) + '</dd></div>' +
-          '<div class="metric"><dt>All time</dt><dd title="' + esc(num(m.downloadsAllTime)) + '">' + esc(compact(m.downloadsAllTime)) + '</dd></div>' +
-          '<div class="metric"><dt>Likes</dt><dd title="' + esc(num(m.likes)) + '">' + esc(compact(m.likes)) + '</dd></div>' +
+          '<div class="metric"><dt>' + esc(t("tile.dl30")) + '</dt><dd title="' + esc(num(m.downloads)) + '">' + esc(compact(m.downloads)) + '</dd></div>' +
+          '<div class="metric"><dt>' + esc(t("tile.allTime")) + '</dt><dd title="' + esc(num(m.downloadsAllTime)) + '">' + esc(compact(m.downloadsAllTime)) + '</dd></div>' +
+          '<div class="metric"><dt>' + esc(t("tile.likes")) + '</dt><dd title="' + esc(num(m.likes)) + '">' + esc(compact(m.likes)) + '</dd></div>' +
         '</dl>' +
-        '<div><span class="chip' + (unspec ? "" : " lit") + '" title="license">' + esc(l) + '</span></div>' +
+        '<div><span class="chip' + (unspec ? "" : " lit") + '" title="' + esc(t("tile.licTitle")) + '">' + esc(dLic(l)) + '</span></div>' +
       '</article>';
   }).join("");
 }
@@ -683,25 +1082,25 @@ function renderModels(){
   const rows = list.slice(start, start + PER);
 
   el("m-count").innerHTML = total
-    ? '<b>' + num(total) + '</b> of ' + num(S.all.length) + ' records &nbsp;·&nbsp; showing ' + num(start+1) + '–' + num(start + rows.length)
-    : '<b>0</b> of ' + num(S.all.length) + ' records';
+    ? t("count.models", { n: num(total), total: num(S.all.length), from: num(start+1), to: num(start + rows.length) })
+    : t("count.modelsZero", { total: num(S.all.length) });
 
   const b = el("m-body");
   if (!rows.length) {
-    b.innerHTML = '<tr><td colspan="10"><div class="empty">No model matches these filters. Clear the search box or reset the pipeline filter.</div></td></tr>';
+    b.innerHTML = '<tr><td colspan="10"><div class="empty">' + esc(t("empty.models")) + '</div></td></tr>';
   } else {
     b.innerHTML = rows.map((m,i) => {
       const l = lic(m);
       return '<tr>' +
         '<td class="rk n">' + num(start + i + 1) + '</td>' +
         '<td class="id">' + esc(m.id) + '</td>' +
-        '<td class="dim">' + esc(m.author) + '</td>' +
+        '<td class="dim">' + esc(dAuthor(m.author)) + '</td>' +
         '<td><span class="tag">' + esc(m.pipeline_tag || "—") + '</span></td>' +
         '<td class="n" title="' + esc(num(m.downloads)) + '">' + esc(compact(m.downloads)) + '</td>' +
         '<td class="n" title="' + esc(num(m.downloadsAllTime)) + '">' + esc(compact(m.downloadsAllTime)) + '</td>' +
         '<td class="n">' + esc(compact(m.likes)) + '</td>' +
         '<td class="n">' + esc(m.trendingScore) + '</td>' +
-        '<td><span class="tag' + (l === "unspecified" ? " dim" : "") + '">' + esc(l) + '</span></td>' +
+        '<td><span class="tag' + (l === "unspecified" ? " dim" : "") + '">' + esc(dLic(l)) + '</span></td>' +
         '<td class="n dim">' + esc(ymd(m.lastModified)) + '</td>' +
       '</tr>';
     }).join("");
@@ -728,21 +1127,22 @@ function renderProviders(){
   const start = (page - 1) * PER;
   const rows = list.slice(start, start + PER);
 
-  el("p-count").innerHTML = '<b>' + num(total) + '</b> providers' + (S.pQuery ? ' matching “' + esc(S.pQuery) + '”' : '') +
-    (rows.length ? ' &nbsp;·&nbsp; showing ' + num(start+1) + '–' + num(start + rows.length) : '');
+  el("p-count").innerHTML =
+    (S.pQuery ? t("count.providersQ", { n: num(total), q: esc(S.pQuery) }) : t("count.providers", { n: num(total) })) +
+    (rows.length ? t("count.showing", { from: num(start+1), to: num(start + rows.length) }) : '');
 
   const b = el("p-body");
   if (!rows.length) {
-    b.innerHTML = '<tr><td colspan="7"><div class="empty">No provider matches that filter.</div></td></tr>';
+    b.innerHTML = '<tr><td colspan="7"><div class="empty">' + esc(t("empty.providers")) + '</div></td></tr>';
   } else {
     b.innerHTML = rows.map((p,i) => '<tr>' +
       '<td class="rk n">' + num(start + i + 1) + '</td>' +
-      '<td class="id">' + esc(p.author) + '</td>' +
+      '<td class="id">' + esc(dAuthor(p.author)) + '</td>' +
       '<td class="n">' + num(p.count) + '</td>' +
       '<td class="n" title="' + esc(num(p.downloads)) + '">' + esc(compact(p.downloads)) + '</td>' +
       '<td class="n" title="' + esc(num(p.downloadsAllTime)) + '">' + esc(compact(p.downloadsAllTime)) + '</td>' +
       '<td class="n">' + esc(compact(p.likes)) + '</td>' +
-      '<td><span class="tag">' + esc(p.topPipe) + '</span></td>' +
+      '<td><span class="tag">' + esc(dTopPipe(p.topPipe)) + '</span></td>' +
     '</tr>').join("");
   }
   pager(el("p-pager"), page, pages, total, p => { S.pPage = p; renderProviders(); });
@@ -757,14 +1157,14 @@ function pager(host, page, pages, total, go){
   for (let i = from; i <= to; i++) win.push(i);
 
   host.innerHTML =
-    '<span class="pos">page ' + num(page) + ' / ' + num(pages) + '</span>' +
-    '<button class="btn mini" data-go="1" ' + (page === 1 ? "disabled" : "") + '>« first</button>' +
-    '<button class="btn mini" data-go="' + (page-1) + '" ' + (page === 1 ? "disabled" : "") + '>prev</button>' +
+    '<span class="pos">' + esc(t("pager.pos", { page: num(page), pages: num(pages) })) + '</span>' +
+    '<button class="btn mini" data-go="1" ' + (page === 1 ? "disabled" : "") + '>' + esc(t("pager.first")) + '</button>' +
+    '<button class="btn mini" data-go="' + (page-1) + '" ' + (page === 1 ? "disabled" : "") + '>' + esc(t("pager.prev")) + '</button>' +
     win.map(i => '<button class="btn mini" data-go="' + i + '"' +
       (i === page ? ' style="border-color:var(--accent);color:var(--accent);background:var(--accent-soft)" aria-current="true"' : '') +
       '>' + i + '</button>').join("") +
-    '<button class="btn mini" data-go="' + (page+1) + '" ' + (page === pages ? "disabled" : "") + '>next</button>' +
-    '<button class="btn mini" data-go="' + pages + '" ' + (page === pages ? "disabled" : "") + '>last »</button>';
+    '<button class="btn mini" data-go="' + (page+1) + '" ' + (page === pages ? "disabled" : "") + '>' + esc(t("pager.next")) + '</button>' +
+    '<button class="btn mini" data-go="' + pages + '" ' + (page === pages ? "disabled" : "") + '>' + esc(t("pager.last")) + '</button>';
 
   host.onclick = ev => {
     const btn = ev.target.closest("button[data-go]");
@@ -792,19 +1192,11 @@ const BPP = { FP16: 2.0, Q8: 1.07, Q6: 0.82, Q5: 0.72, Q4: 0.60 };
 const OVERHEAD = 1.5;
 const MIN_PARAMS = 1e8;   /* below this the record is a test stub, not a usable model */
 
+/* `policy` is an i18n key, resolved at render time */
 const CARDS = [
-  {
-    name: "RTX 3090", vram: 24, ladder: ["Q4"], target: 0.45, reserve: 0.97,
-    policy: "Ampere, 24 GB, no FP8 path — the conservative pick. Weights are budgeted at Q4 only and kept near 45 % of VRAM, leaving room for a long KV cache."
-  },
-  {
-    name: "RTX 4090", vram: 24, ladder: ["Q6","Q5"], target: 0.78, reserve: 0.97,
-    policy: "Ada, 24 GB. Same capacity as the 3090 but budgeted at Q5/Q6, so the list favours models that stay high-quality while filling ~78 % of VRAM."
-  },
-  {
-    name: "RTX 5090", vram: 32, ladder: ["Q8","Q6"], target: 0.85, reserve: 0.97,
-    policy: "Blackwell, 32 GB. Takes the highest quantisation that fits — Q8 up to ~27 B, Q6 for the 30 B class that no 24 GB card can hold at this quality."
-  }
+  { name: "RTX 3090", vram: 24, ladder: ["Q4"],       target: 0.45, reserve: 0.97, policy: "gpu.policy.3090" },
+  { name: "RTX 4090", vram: 24, ladder: ["Q6","Q5"],  target: 0.78, reserve: 0.97, policy: "gpu.policy.4090" },
+  { name: "RTX 5090", vram: 32, ladder: ["Q8","Q6"],  target: 0.85, reserve: 0.97, policy: "gpu.policy.5090" }
 ];
 
 function vramFor(paramsCount, q){ return (paramsCount / 1e9) * BPP[q] + OVERHEAD; }
@@ -844,14 +1236,14 @@ function renderGpu(){
   const pool = gpuPool();
   const withParams = S.all.filter(m => m.pipeline_tag === "text-generation" && m.params !== null).length;
 
-  el("gpu-scope").innerHTML =
-    'Scope: <code>' + num(pool.length) + '</code> of ' + num(withParams) +
-    ' text-generation records that publish a parameter count (out of ' + num(S.all.length) +
-    ' records in the snapshot). Entries below 0.1 B parameters and <code>tiny-random</code> test stubs are excluded — a handful of repositories publish placeholder parameter counts that would otherwise rank as “fits everywhere”.';
+  el("gpu-scope").innerHTML = t("gpu.scope", {
+    pool: num(pool.length), withParams: num(withParams), all: num(S.all.length)
+  });
 
   const host = el("gpu-tables");
   if (!pool.length) {
-    host.innerHTML = '<div class="state"><div class="glyph" aria-hidden="true">[ ∅ ]</div><h2>No sizing data</h2><p>No text-generation record in this snapshot publishes a parameter count, so VRAM estimates cannot be computed.</p></div>';
+    host.innerHTML = '<div class="state"><div class="glyph" aria-hidden="true">[ ∅ ]</div><h2>' +
+      esc(t("err.nosizing.title")) + '</h2><p>' + esc(t("err.nosizing.body")) + '</p></div>';
     return;
   }
 
@@ -863,31 +1255,33 @@ function renderGpu(){
       return '<tr>' +
         '<td class="rk n">' + rank(i) + '</td>' +
         '<td class="id">' + esc(m.id) + '</td>' +
-        '<td class="dim">' + esc(m.author) + '</td>' +
+        '<td class="dim">' + esc(dAuthor(m.author)) + '</td>' +
         '<td class="n">' + esc(pB.toFixed(pB < 10 ? 2 : 1)) + ' B</td>' +
         '<td><span class="q">' + esc(c.q) + '</span></td>' +
         '<td class="n"><b>' + esc(c.gb.toFixed(1)) + ' GB</b>' +
-          '<span class="bar' + (hot ? " hot" : "") + '" title="' + Math.round(c.util*100) + '% of ' + card.vram + ' GB"><i style="width:' + Math.min(100, Math.round(c.util*100)) + '%"></i></span></td>' +
+          '<span class="bar' + (hot ? " hot" : "") + '" title="' +
+          esc(t("gpu.util", { pct: Math.round(c.util*100), vram: card.vram })) +
+          '"><i style="width:' + Math.min(100, Math.round(c.util*100)) + '%"></i></span></td>' +
         '<td class="n dim">' + esc(vramFor(m.params,"Q4").toFixed(1)) + '</td>' +
         '<td class="n dim">' + esc(vramFor(m.params,"Q8").toFixed(1)) + '</td>' +
         '<td class="n dim">' + esc(vramFor(m.params,"FP16").toFixed(1)) + '</td>' +
-        '<td><span class="tag' + (lic(m) === "unspecified" ? " dim" : "") + '">' + esc(lic(m)) + '</span></td>' +
+        '<td><span class="tag' + (lic(m) === "unspecified" ? " dim" : "") + '">' + esc(dLic(lic(m))) + '</span></td>' +
       '</tr>';
-    }).join("") : '<tr><td colspan="10"><div class="empty">No model in the snapshot fits this card at its budgeted quantisation.</div></td></tr>';
+    }).join("") : '<tr><td colspan="10"><div class="empty">' + esc(t("gpu.empty")) + '</div></td></tr>';
 
     return '' +
     '<section class="gpu">' +
       '<div class="gpu-head">' +
         '<h3>' + esc(card.name) + '</h3>' +
-        '<span class="vram">' + card.vram + ' GB VRAM · budget ' + card.ladder.join(" → ") + '</span>' +
-        '<p class="policy">' + esc(card.policy) + '</p>' +
+        '<span class="vram">' + esc(t("gpu.badge", { vram: card.vram, ladder: card.ladder.join(" → ") })) + '</span>' +
+        '<p class="policy">' + esc(t(card.policy)) + '</p>' +
       '</div>' +
       '<div class="tw">' +
-        '<table><caption class="sr">' + esc(card.name) + ' top 10 fitting models</caption>' +
+        '<table><caption class="sr">' + esc(t("gpu.caption", { card: card.name })) + '</caption>' +
         '<thead><tr>' +
-          '<th class="n">#</th><th>Model</th><th>Author</th><th class="n">Params</th>' +
-          '<th>Budgeted</th><th class="n">Est. VRAM</th>' +
-          '<th class="n">Q4 GB</th><th class="n">Q8 GB</th><th class="n">FP16 GB</th><th>License</th>' +
+          '<th class="n">' + esc(t("th.num")) + '</th><th>' + esc(t("th.model")) + '</th><th>' + esc(t("th.author")) + '</th><th class="n">' + esc(t("th.params")) + '</th>' +
+          '<th>' + esc(t("th.budgeted")) + '</th><th class="n">' + esc(t("th.estVram")) + '</th>' +
+          '<th class="n">Q4 GB</th><th class="n">Q8 GB</th><th class="n">FP16 GB</th><th>' + esc(t("th.license")) + '</th>' +
         '</tr></thead><tbody>' + body + '</tbody></table>' +
       '</div>' +
     '</section>';
@@ -907,8 +1301,63 @@ function route(){
   document.querySelectorAll(".tab").forEach(t => {
     if (t.dataset.view === v) t.setAttribute("aria-current","page"); else t.removeAttribute("aria-current");
   });
-  const t ={ top:"Top 10", models:"Model index", providers:"Providers", gpu:"GPU compatibility" }[v];
-  document.title = t + " — AnonModel";
+  document.title = t("title." + v) + " — AnonModel";
+}
+
+/* ============================================================
+   language switch
+   ============================================================ */
+
+/* static chrome: textContent, innerHTML fragments (which carry raw
+   identifiers such as <span class="tag">trendingScore</span>), and
+   attributes (placeholder / aria-label) */
+function applyStatics(){
+  document.documentElement.setAttribute("lang", HTML_LANG[LANG] || "en");
+  const d = document.querySelector('meta[name="description"]');
+  if (d) d.setAttribute("content", t("meta.desc"));
+
+  document.querySelectorAll("[data-i18n]").forEach(n => { n.textContent = t(n.dataset.i18n); });
+  document.querySelectorAll("[data-i18n-html]").forEach(n => { n.innerHTML = t(n.dataset.i18nHtml); });
+  document.querySelectorAll("[data-i18n-attr]").forEach(n => {
+    n.dataset.i18nAttr.split(";").forEach(pair => {
+      const bits = pair.split(":");
+      if (bits.length === 2) n.setAttribute(bits[0].trim(), t(bits[1].trim()));
+    });
+  });
+
+  document.querySelectorAll(".langsw button").forEach(b => {
+    const on = b.dataset.lang === LANG;
+    b.setAttribute("aria-pressed", on ? "true" : "false");
+    b.setAttribute("aria-label", t("lang." + b.dataset.lang + ".aria"));
+  });
+  syncDir();
+}
+
+/* the order button's label and aria-label live in two states × two
+   languages — routed through one place so they cannot drift */
+function syncDir(){
+  const b = el("f-dir");
+  if (!b) return;
+  const k = S.mDir === -1 ? "desc" : "asc";
+  b.textContent = t("dir." + k);
+  b.setAttribute("aria-label", t("dir." + k + ".aria"));
+}
+
+function setLang(lang, persist){
+  if (lang !== "en" && lang !== "zh") lang = "en";
+  LANG = lang;
+  if (persist) langWrite(lang);
+  applyStatics();
+  if (FAILED) { fail(FAILED.kind, FAILED.vars); return; }
+  if (!S.ready) return;
+  /* every JS-rendered surface re-renders from the same state */
+  renderPipelineOptions();
+  renderTop();
+  renderModels();
+  renderProviders();
+  renderGpu();
+  el("foot-sig").textContent = t("foot.sig", { n: num(S.all.length) });
+  route();
 }
 
 function wire(){
@@ -920,12 +1369,12 @@ function wire(){
 
   el("f-pipe").addEventListener("change", e => { S.mPipe = e.target.value; S.mPage = 1; applyModels(); });
   el("f-sort").addEventListener("change", e => { S.mSort = e.target.value; S.mPage = 1; applyModels(); });
-  el("f-dir").addEventListener("click", e => {
+  el("f-dir").addEventListener("click", () => {
     S.mDir = -S.mDir;
-    e.currentTarget.textContent = S.mDir === -1 ? "↓ desc" : "↑ asc";
-    e.currentTarget.setAttribute("aria-label", "Sort order: " + (S.mDir === -1 ? "descending" : "ascending"));
+    syncDir();
     S.mPage = 1; applyModels();
   });
+
 
   const pq = el("pq");
   pq.addEventListener("input", debounce(() => { S.pQuery = pq.value; S.pPage = 1; applyProviders(); }, 150));
@@ -939,9 +1388,10 @@ function wire(){
   const sSel = el("f-sort");
   if (sSel.value) S.mSort = sSel.value;
 
+  syncDir();
   applyModels();
   applyProviders();
-  el("foot-sig").textContent = "ANONMODEL · " + num(S.all.length) + " RECORDS · STATIC SNAPSHOT";
+  el("foot-sig").textContent = t("foot.sig", { n: num(S.all.length) });
 }
 
 /* ---------- signature element #2: the wordmark decodes once, on load ---------- */
@@ -966,6 +1416,20 @@ function wire(){
       node.innerHTML = final[0] + "<b>" + final[1] + "</b>";
     }
   }, 34);
+})();
+
+/* Language is resolved and wired BEFORE the fetch, so the boot state and
+   any failure state already speak the persisted language, and the toggle
+   keeps working even if the snapshot never loads. Default is English:
+   navigator.language is deliberately NOT consulted, so a visitor who
+   never touches the toggle sees exactly what they saw before. */
+(function initLang(){
+  document.querySelectorAll(".langsw button").forEach(b => {
+    b.addEventListener("click", () => {
+      if (b.dataset.lang !== LANG) setLang(b.dataset.lang, true);
+    });
+  });
+  setLang(langRead() || "en", false);
 })();
 
 boot();
